@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
-import 'package:gym_fitgo/services/notification_services.dart';
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: LoginScreen(),
+    );
+  }
+}
 
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
-// Función para programar la notificación automática
-void _scheduleNotification() async {
-  await Future.delayed(Duration(seconds: 10)); // Retraso de 10 segundos
-  await mostrarNotificacion(); // Llama a la función para mostrar la notificación
-}
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
-  // Credenciales preestablecidas
-  final String _correctUsername = "usuario"; // Cambia esto por tu usuario deseado
-  final String _correctPassword = "123"; // Cambia esto por tu contraseña deseada
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
               SizedBox(height: 20),
-              Icon(Icons.fitness_center, size: 50, color: Colors.white), // Icono del gimnasio
+              Icon(Icons.fitness_center, size: 50, color: Colors.white),
               SizedBox(height: 20),
               TextField(
-                controller: _usernameController,
+                controller: _emailController,
                 decoration: InputDecoration(
-                  hintText: "Usuario",
+                  hintText: "Correo electrónico",
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(),
@@ -60,12 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, // Color del botón
+                  backgroundColor: Colors.purple,
                 ),
-                child: Text("Iniciar sesión",
-                style: TextStyle(
-                  color: Colors.white,
-                ),),
+                child: Text(
+                  "Iniciar sesión",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -74,22 +76,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login() {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+  void _login() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
-    // Verifica las credenciales
-    if (username == _correctUsername && password == _correctPassword) {
-      // Si las credenciales son correctas, navega a la pantalla principal
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Si la autenticación es exitosa, navega a la pantalla principal
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => GymSurveyScreen()),
       );
-    } else {
-      // Si las credenciales son incorrectas, muestra un mensaje de error
+    } catch (e) {
+      // Muestra un mensaje de error si ocurre algún problema
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Usuario o contraseña incorrectos."),
+          content: Text("Correo o contraseña incorrectos."),
           backgroundColor: Colors.red,
         ),
       );
