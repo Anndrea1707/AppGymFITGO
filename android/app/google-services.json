@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "313435392910",
+    "project_id": "gymfitgo-3f5a8",
+    "storage_bucket": "gymfitgo-3f5a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313435392910:android:c9e252585f84e05a3fb2df",
+        "android_client_info": {
+          "package_name": "com.example.gym_fitgo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM7TPB_HqtB6wj55Q9fLLNJveatA-x7gQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
