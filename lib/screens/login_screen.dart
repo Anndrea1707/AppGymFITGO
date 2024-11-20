@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
+import 'package:gym_fitgo/screens/admin_main_screen.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -20,6 +21,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false; // Controla la visibilidad de la contraseña
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +52,25 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 10),
               TextField(
                 controller: _passwordController,
+                obscureText: !_isPasswordVisible, // Cambiar visibilidad
                 decoration: InputDecoration(
                   hintText: "Contraseña",
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
               ),
               SizedBox(height: 20),
               ElevatedButton(
@@ -81,21 +95,36 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text.trim();
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: email)
+          .where('password', isEqualTo: password)
+          .get();
 
-      // Si la autenticación es exitosa, navega a la pantalla principal
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => GymSurveyScreen()),
-      );
+      if (userDoc.docs.isNotEmpty) {
+        if (email == 'gymfitgo8@gmail.com') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminMainScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => GymSurveyScreen()),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Correo o contraseña incorrectos."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
-      // Muestra un mensaje de error si ocurre algún problema
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Correo o contraseña incorrectos."),
+          content: Text("Error al conectarse. Verifique su conexión."),
           backgroundColor: Colors.red,
         ),
       );
