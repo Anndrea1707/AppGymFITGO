@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
 import 'package:gym_fitgo/screens/admin_main_screen.dart';
 
@@ -22,6 +21,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false; // Controla la visibilidad de la contraseña
 
   @override
   Widget build(BuildContext context) {
@@ -52,13 +52,25 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 10),
               TextField(
                 controller: _passwordController,
+                obscureText: !_isPasswordVisible, // Cambiar visibilidad
                 decoration: InputDecoration(
                   hintText: "Contraseña",
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
               ),
               SizedBox(height: 20),
               ElevatedButton(
@@ -83,7 +95,6 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text.trim();
 
     try {
-      // Verificar si el usuario existe en Firestore
       final userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
           .where('email', isEqualTo: email)
@@ -91,22 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
           .get();
 
       if (userDoc.docs.isNotEmpty) {
-        // Usuario encontrado
         if (email == 'gymfitgo8@gmail.com') {
-          // Redirigir a la pantalla de administrador
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => AdminMainScreen()),
           );
         } else {
-          // Redirigir a la pantalla de encuestas
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => GymSurveyScreen()),
           );
         }
       } else {
-        // Usuario no encontrado o contraseña incorrecta
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Correo o contraseña incorrectos."),
@@ -115,10 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      // Manejar errores
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Ocurrió un error. Inténtalo de nuevo."),
+          content: Text("Error al conectarse. Verifique su conexión."),
           backgroundColor: Colors.red,
         ),
       );
