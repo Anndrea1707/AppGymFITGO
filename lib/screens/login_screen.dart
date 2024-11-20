@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
+import 'package:gym_fitgo/screens/admin_main_screen.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -81,21 +83,42 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text.trim();
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      // Verificar si el usuario existe en Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: email)
+          .where('password', isEqualTo: password)
+          .get();
 
-      // Si la autenticación es exitosa, navega a la pantalla principal
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => GymSurveyScreen()),
-      );
+      if (userDoc.docs.isNotEmpty) {
+        // Usuario encontrado
+        if (email == 'gymfitgo8@gmail.com') {
+          // Redirigir a la pantalla de administrador
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminMainScreen()),
+          );
+        } else {
+          // Redirigir a la pantalla de encuestas
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => GymSurveyScreen()),
+          );
+        }
+      } else {
+        // Usuario no encontrado o contraseña incorrecta
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Correo o contraseña incorrectos."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
-      // Muestra un mensaje de error si ocurre algún problema
+      // Manejar errores
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Correo o contraseña incorrectos."),
+          content: Text("Ocurrió un error. Inténtalo de nuevo."),
           backgroundColor: Colors.red,
         ),
       );
