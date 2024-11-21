@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
 import 'package:gym_fitgo/services/notification_services.dart';
+import 'exercise_description_screen.dart'; // Asegúrate de importar esta pantalla
 
 class RutinasScreen extends StatefulWidget {
   @override
   RutinasScreenState createState() => RutinasScreenState();
 }
-// Función para programar la notificación automática
+
 void _scheduleNotification() async {
   await Future.delayed(Duration(seconds: 10)); // Retraso de 10 segundos
   await mostrarNotificacion(); // Llama a la función para mostrar la notificación
@@ -56,7 +57,7 @@ class RutinasScreenState extends State<RutinasScreen> {
                 'Squat jump: 3x20'
               ],
               'https://www.shutterstock.com/image-vector/man-doing-smashbell-training-leg-260nw-2364568263.jpg',
-              widthFactor: 0.9, // Ajusta el ancho del Card aquí
+              widthFactor: 0.9,
             ),
             _buildRoutineCard(
               'Día 2',
@@ -69,7 +70,7 @@ class RutinasScreenState extends State<RutinasScreen> {
                 'Press de hombro: 3x12'
               ],
               'https://static.vecteezy.com/system/resources/previews/005/178/325/non_2x/woman-doing-overhead-dumbbell-shoulder-press-exercise-flat-illustration-isolated-on-white-background-free-vector.jpg',
-              widthFactor: 0.9, // Ajusta el ancho del Card aquí
+              widthFactor: 0.9,
             ),
             _buildRoutineCard(
               'Día 3',
@@ -82,7 +83,7 @@ class RutinasScreenState extends State<RutinasScreen> {
                 'Lunges: 3x20'
               ],
               'https://www.shutterstock.com/image-vector/woman-doing-barbell-romanian-deadlifts-600nw-2309715515.jpg',
-              widthFactor: 0.9, // Ajusta el ancho del Card aquí
+              widthFactor: 0.9,
             ),
             _buildRoutineCard(
               'Día 4',
@@ -95,7 +96,7 @@ class RutinasScreenState extends State<RutinasScreen> {
                 'Flexiones: 3x20'
               ],
               'https://www.shutterstock.com/image-vector/woman-doing-lateral-side-shoulder-600nw-2032680152.jpg',
-              widthFactor: 0.9, // Ajusta el ancho del Card aquí
+              widthFactor: 0.9,
             ),
             _buildRoutineCard(
               'Día 5',
@@ -108,14 +109,14 @@ class RutinasScreenState extends State<RutinasScreen> {
                 'Levantamiento de piernas: 3x15'
               ],
               'https://www.shutterstock.com/image-vector/woman-doing-forearm-plank-exercise-260nw-2069690030.jpg',
-              widthFactor: 0.9, // Ajusta el ancho del Card aquí
+              widthFactor: 0.9,
             ),
           ],
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _selectedIndex,
-        onTap: _onNavBarTapped, // Rutinas será la segunda pestaña
+        onTap: _onNavBarTapped,
       ),
     );
   }
@@ -124,7 +125,7 @@ class RutinasScreenState extends State<RutinasScreen> {
       List<String> exercises, String imageUrl,
       {required double widthFactor}) {
     return FractionallySizedBox(
-      widthFactor: widthFactor, // El ancho lo ajustas aquí
+      widthFactor: widthFactor,
       child: Card(
         color: Colors.deepPurple[50],
         shape: RoundedRectangleBorder(
@@ -136,19 +137,16 @@ class RutinasScreenState extends State<RutinasScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Imagen a la izquierda
               ClipRRect(
-                borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                borderRadius: BorderRadius.circular(10),
                 child: Image.network(
                   imageUrl,
-                  width: 100, // Ancho fijo para la imagen
-                  height: 100, // Alto fijo para la imagen
+                  width: 100,
+                  height: 100,
                   fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(
-                  width: 16), // Espacio entre la imagen y el contenido
-              // Columna con el contenido del texto
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +154,7 @@ class RutinasScreenState extends State<RutinasScreen> {
                     Row(
                       children: [
                         CircularProgressIndicator(
-                          value: 0.45, // Progreso fijo (ajustable)
+                          value: 0.45,
                           backgroundColor: Colors.grey[300],
                           color: Colors.deepPurple,
                         ),
@@ -177,7 +175,6 @@ class RutinasScreenState extends State<RutinasScreen> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    // Lista de ejercicios desplegable
                     ExpansionTile(
                       title: const Text('Ver ejercicios'),
                       children: exercises.map((exercise) {
@@ -187,10 +184,14 @@ class RutinasScreenState extends State<RutinasScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
-                    // Botón para iniciar rutina
                     ElevatedButton(
                       onPressed: () {
-                        // Acciones de los botones
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ExerciseDescriptionScreen(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purpleAccent,
