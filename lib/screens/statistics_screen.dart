@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class AdminMainScreen extends StatelessWidget {
+class StatisticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Administrador'),
+        title: Text('Retos'),
       ),
       body: Center(
         child: Text(
-          'Bienvenido!!!!!!!!!!!!!!!!!!!',
+          'Aquí van las estadisticas.',
           style: TextStyle(fontSize: 24),
         ),
       ),

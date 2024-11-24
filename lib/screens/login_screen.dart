@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
-import 'package:gym_fitgo/screens/admin_main_screen.dart';
+import 'package:gym_fitgo/screens/admin_home_screen.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -38,7 +38,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
               SizedBox(height: 20),
-              Icon(Icons.fitness_center, size: 50, color: Colors.white),
+              Image.asset(
+                "images/mancuerna.png", // Ruta de la imagen
+                width: 50, // Tamaño de la imagen
+                height: 50,
+              ),
               SizedBox(height: 20),
               TextField(
                 controller: _emailController,
@@ -105,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (email == 'gymfitgo8@gmail.com') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => AdminMainScreen()),
+            MaterialPageRoute(builder: (context) => AdminHomeScreen()),
           );
         } else {
           Navigator.pushReplacement(
