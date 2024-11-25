@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_fitgo/screens/rect_admin.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
 import 'package:gym_fitgo/screens/nutrition_tips_screen.dart';
@@ -102,7 +103,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               _buildCategoryButton('Recetas', Colors.white, () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => NutritionTipsScreen()),
+                  MaterialPageRoute(builder: (context) => NutritionTipsScreen_admin()),
                 );
               }),
               SizedBox(height: 10),
