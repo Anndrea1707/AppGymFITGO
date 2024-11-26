@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_fitgo/screens/home_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen.dart';
 import 'package:gym_fitgo/screens/rutinas_screen.dart';
@@ -11,6 +13,36 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 3; // Índice actual para el botón "Perfil"
+  String name = '';
+  int age = 0;
+  double weight = 0;
+  double height = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    // Obtén el ID del usuario actual desde Firebase Auth
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Busca los datos en la colección "Usuarios"
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Usuarios').doc(user.uid).get();
+      
+      if (userDoc.exists) {
+        // Obtén los datos del usuario
+        var data = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          name = data['name'] ?? '';
+          age = data['age'] ?? 0;
+          weight = data['weight']?.toDouble() ?? 0.0;
+          height = data['height']?.toDouble() ?? 0.0;
+        });
+      }
+    }
+  }
 
   void _onTap(int index) {
     // Actualiza el índice y navega a la pantalla correspondiente
@@ -64,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "Nombre usuario",
+                      name.isEmpty ? "Cargando..." : name,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -72,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     Text(
-                      "Nivel: principiante",
+                      "Nivel: principiante", // Este valor lo puedes actualizar más tarde
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 16,
@@ -87,10 +119,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildUserDetail("Edad", "22 años"),
-                  _buildUserDetail("Peso", "62 kg"),
-                  _buildUserDetail("Altura", "1.55 m"),
-                  _buildUserDetail("Fecha inicio", "03/03/2024"),
+                  _buildUserDetail("Edad", age > 0 ? "$age años" : "Cargando..."),
+                  _buildUserDetail("Peso", weight > 0 ? "$weight kg" : "Cargando..."),
+                  _buildUserDetail("Altura", height > 0 ? "$height m" : "Cargando..."),
+                  _buildUserDetail("Fecha inicio", "03/03/2024"), // Este dato es fijo por ahora
                 ],
               ),
               const SizedBox(height: 24),
