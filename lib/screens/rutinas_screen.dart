@@ -47,7 +47,7 @@ class RutinasScreenState extends State<RutinasScreen> {
         },
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _selectedIndex,
+        currentIndex: 1,
         onTap: _onNavBarTapped,
       ),
     );
