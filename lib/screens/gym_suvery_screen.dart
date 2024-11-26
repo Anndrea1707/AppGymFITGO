@@ -1,22 +1,63 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_fitgo/screens/beginner_routine_screen.dart';
-import 'package:gym_fitgo/services/notification_services.dart';
 
 class GymSurveyScreen extends StatefulWidget {
   @override
   _GymSurveyScreenState createState() => _GymSurveyScreenState();
 }
-// Función para programar la notificación automática
-void _scheduleNotification() async {
-  await Future.delayed(Duration(seconds: 10)); // Retraso de 10 segundos
-  await mostrarNotificacion(); // Llama a la función para mostrar la notificación
-}
 
 class _GymSurveyScreenState extends State<GymSurveyScreen> {
   double _weight = 70; // Peso inicial
+  double? _height;
+  int? _age;
   String? _gender;
   String? _limitation;
   String? _goal;
+
+  // Función para guardar los datos en Firestore
+  Future<void> _saveData() async {
+    if (_age == null || _height == null || _gender == null || _limitation == null || _goal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Por favor, completa todos los campos."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('usuarios').add({
+        'age': _age,
+        'weight': _weight,
+        'height': _height,
+        'gender': _gender,
+        'limitation': _limitation,
+        'goal': _goal,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Datos guardados con éxito."),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navegar a la pantalla de éxito
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => BeginnerRoutineScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error al guardar los datos: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +65,10 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
       backgroundColor: Color(0xFF0a0322), // Color de fondo personalizado
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5EDE4),
-        leading: Icon(Icons.arrow_back, color: Colors.black),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text('Registra tus Datos'),
         centerTitle: true,
       ),
@@ -56,7 +100,11 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                     child: Text('$value años'),
                   );
                 }).toList(),
-                onChanged: (newValue) {},
+                onChanged: (newValue) {
+                  setState(() {
+                    _age = newValue;
+                  });
+                },
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
@@ -87,7 +135,11 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                     child: Text('${value.toStringAsFixed(2)} m'),
                   );
                 }).toList(),
-                onChanged: (newValue) {},
+                onChanged: (newValue) {
+                  setState(() {
+                    _height = newValue;
+                  });
+                },
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
@@ -164,38 +216,11 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.purpleAccent,
                 ),
-                onPressed: () {
-                  // Navegar a la pantalla de éxito
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => BeginnerRoutineScreen()),
-                  );
-                },
+                onPressed: _saveData,
                 child: Text('Guardar', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// Nueva pantalla para mostrar un mensaje de éxito
-class SuccessScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 210, 185, 253),
-        title: Text('Éxito'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Text(
-          '¡Tus datos han sido guardados con éxito!',
-          style: TextStyle(fontSize: 24, color: Colors.black),
-          textAlign: TextAlign.center,
         ),
       ),
     );
