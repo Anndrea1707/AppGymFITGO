@@ -4,7 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
 import 'package:gym_fitgo/screens/nutrition_tips_screen.dart';
 import 'package:gym_fitgo/screens/login_screen.dart';
-import 'package:gym_fitgo/screens/user_management.dart';
+import 'package:gym_fitgo/screens/users_screen_admin.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart'; // Pantalla de estadísticas
 
 class AdminHomeScreen extends StatefulWidget {
@@ -110,7 +110,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               _buildCategoryButton('Gestión de Usuarios', Colors.white, () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => UserManagement()),
+                  MaterialPageRoute(builder: (context) => UsersScreenAdmin()),
                 );
               }),
               SizedBox(height: 10),
