@@ -195,10 +195,12 @@ class ChallengeDetailScreen extends StatelessWidget {
           children: [
             Image.network(challenge['image']),
             const SizedBox(height: 20),
-            Text('Descripción: ${challenge['description']}'),
-            Text('Duración: ${challenge['duration']} días'),
-            Text('Fecha de inicio: ${challenge['fechaInicio']}'),
-            Text('Fecha de fin: ${challenge['fechaFin']}'),
+            Text('Descripción: ${challenge['description']}', style: TextStyle(color: Colors.white),),
+            Text('Duración: ${challenge['duration']} días', style: TextStyle(color: Colors.white),),
+            Text('Fecha de inicio: ${challenge['fechaInicio']}', style: TextStyle(color: Colors.white),),
+            Text('Fecha de fin: ${challenge['fechaFin']}',
+            style: TextStyle(color: Colors.white),
+            )
           ],
         ),
       ),
