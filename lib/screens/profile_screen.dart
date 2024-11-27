@@ -28,7 +28,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Usuarios').doc(user.uid).get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Usuarios')
+          .doc(user.uid)
+          .get();
       if (userDoc.exists) {
         var data = userDoc.data() as Map<String, dynamic>;
         setState(() {
@@ -86,7 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundImage: AssetImage('assets/avatar_placeholder.png'),
+                      backgroundImage:
+                          AssetImage('assets/avatar_placeholder.png'),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -111,9 +115,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildUserDetail("Edad", age > 0 ? "$age años" : "Cargando..."),
-                  _buildUserDetail("Peso", weight > 0 ? "$weight kg" : "Cargando..."),
-                  _buildUserDetail("Altura", height > 0 ? "$height m" : "Cargando..."),
+                  _buildUserDetail(
+                      "Edad", age > 0 ? "$age años" : "Cargando..."),
+                  _buildUserDetail(
+                      "Peso", weight > 0 ? "$weight kg" : "Cargando..."),
+                  _buildUserDetail(
+                      "Altura", height > 0 ? "$height m" : "Cargando..."),
                   _buildUserDetail("Fecha inicio", "03/03/2024"),
                 ],
               ),
@@ -126,7 +133,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text("Actualizar", style: TextStyle(color: Colors.white)),
+                child: const Text("Actualizar",
+                    style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
 
@@ -135,7 +143,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => GymSurveyScreen()), // Navegar a GymSurveyScreen
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            GymSurveyScreen()), // Navegar a GymSurveyScreen
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -145,10 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 child: const Text("Ver encuesta",
-                style: TextStyle(
-                  color: Colors.white
-                )
-                ),
+                    style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
 
@@ -172,12 +179,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
-                          .map((day) => Chip(
-                                label: Text(day),
-                                backgroundColor: Colors.purple.shade200,
-                              ))
-                          .toList(),
+                      children:
+                          ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+                              .map((day) => Chip(
+                                    label: Text(day),
+                                    backgroundColor: Colors.purple.shade200,
+                                  ))
+                              .toList(),
                     ),
                   ],
                 ),
@@ -206,7 +214,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         Text(
           value,
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ],
     );
