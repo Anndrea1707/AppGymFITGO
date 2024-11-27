@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart';
-import 'package:gym_fitgo/screens/users_screen_admin.dart';
+import 'package:gym_fitgo/screens/rutinas_screen_admin.dart';
 
 class CustomBottomNavbarAdmin extends StatelessWidget {
   final int currentIndex;
@@ -24,25 +24,25 @@ class CustomBottomNavbarAdmin extends StatelessWidget {
         // Cambiar la pantalla según el índice del botón presionado
         switch (index) {
           case 0:
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => AdminHomeScreen()), // Pantalla de Principal en otro archivo
             );
             break;
           case 1:
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => UsersScreenAdmin()), // Pantalla de Rutinas en otro archivo
+              MaterialPageRoute(builder: (context) => RutinasScreenAdmin()), // Pantalla de Rutinas en otro archivo
             );
             break;
           case 2:
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => ChallengesScreenAdmin()), // Pantalla de Retos en otro archivo
             );
             break;
           case 3:
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => StatisticsScreen()), // Pantalla de Perfil en otro archivo
             );
