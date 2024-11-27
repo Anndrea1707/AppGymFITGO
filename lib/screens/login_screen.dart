@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
+import 'package:gym_fitgo/screens/beginner_routine_screen.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
 
 class MyApp extends StatelessWidget {
@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => GymSurveyScreen()),
+            MaterialPageRoute(builder: (context) => BeginnerRoutineScreen()),
           );
         }
       } else {

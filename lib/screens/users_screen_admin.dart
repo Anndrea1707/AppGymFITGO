@@ -310,10 +310,12 @@ class AddUserScreen extends StatelessWidget {
                   'name': nameController.text,
                   'email': emailController.text,
                   'role': roleController.text,
-                  // No agregamos la contraseña aquí, solo los datos editables
+                  'password': passwordController
+                      .text, // Asegúrate de agregar la contraseña aquí
                   // 'password': passwordController.text, // Omitido en este caso
                 };
 
+                // Luego, si estamos agregando un nuevo usuario:
                 if (userId == null) {
                   // Si no hay userId, estamos agregando un nuevo usuario
                   await FirebaseFirestore.instance
@@ -326,7 +328,6 @@ class AddUserScreen extends StatelessWidget {
                       .doc(userId)
                       .update(userData);
                 }
-
                 // Volver a la pantalla anterior
                 Navigator.pop(context);
               },

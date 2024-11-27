@@ -1,16 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
+import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
 import 'exercise_description_screen.dart'; // Asegúrate de importar esta pantalla
-import 'package:gym_fitgo/screens/rutinas_screen_admin.dart';
+import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
+import 'package:gym_fitgo/screens/statistics_screen.dart';
 
-class RutinasScreenAdmin extends StatefulWidget {
+class AdminRutinsScreen extends StatefulWidget {
   @override
   RutinasScreenAdminState createState() => RutinasScreenAdminState();
 }
 
-class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
-  int _selectedIndex = 0; // Índice seleccionado
+class RutinasScreenAdminState extends State<AdminRutinsScreen> {
+  int _currentIndex = 1; // Inicializa el índice en 1 porque esta es la pantalla de Rutinas
+
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navegación de la barra de navegación
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+        );
+        break;
+      case 1:
+        // Ya estamos en esta pantalla, no es necesario navegar
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ChallengesScreenAdmin()),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => StatisticsScreen()),
+        );
+        break;
+    }
+  }
 
   // Lista de rutinas predefinidas
   List<Map<String, dynamic>> routines = [
@@ -23,7 +55,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
         'Front squat: 3x20',
         'Squat jump: 3x20'
       ],
-      'image': 'https://homeworkouts.org/wp-content/uploads/anim-dumbbell-deadlifts.gif'
+      'image':
+          'https://homeworkouts.org/wp-content/uploads/anim-dumbbell-deadlifts.gif'
     },
     {
       'day': 'Día 2',
@@ -34,7 +67,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
         'Curl de bíceps: 3x12',
         'Press de hombro: 3x12'
       ],
-      'image': 'https://www.fitundattraktiv.de/wp-content/uploads/2017/09/latziehen_enger_griff-neutrales_griffstueck.gif'
+      'image':
+          'https://www.fitundattraktiv.de/wp-content/uploads/2017/09/latziehen_enger_griff-neutrales_griffstueck.gif'
     },
     {
       'day': 'Día 3',
@@ -45,7 +79,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
         'Peso muerto: 3x15',
         'Lunges: 3x20'
       ],
-      'image': 'https://liftmanual.com/wp-content/uploads/2023/04/squat-mobility.gif'
+      'image':
+          'https://liftmanual.com/wp-content/uploads/2023/04/squat-mobility.gif'
     },
     {
       'day': 'Día 4',
@@ -56,7 +91,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
         'Elevaciones laterales: 3x12',
         'Flexiones: 3x20'
       ],
-      'image': 'https://i.pinimg.com/originals/8b/d3/74/8bd3745dca0749b912b08b0d4bca3833.gif'
+      'image':
+          'https://i.pinimg.com/originals/8b/d3/74/8bd3745dca0749b912b08b0d4bca3833.gif'
     },
     {
       'day': 'Día 5',
@@ -67,7 +103,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
         'Russian twists: 3x20',
         'Levantamiento de piernas: 3x15'
       ],
-      'image': 'https://fitliferegime.com/wp-content/uploads/2024/06/Hanging-Knee-Raise.gif'
+      'image':
+          'https://fitliferegime.com/wp-content/uploads/2024/06/Hanging-Knee-Raise.gif'
     },
   ];
 
@@ -97,7 +134,8 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
               ),
               TextField(
                 controller: _exercisesController,
-                decoration: InputDecoration(labelText: 'Ejercicios (separados por coma)'),
+                decoration: InputDecoration(
+                    labelText: 'Ejercicios (separados por coma)'),
               ),
               TextField(
                 controller: _imageUrlController,
@@ -143,7 +181,7 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5EDE4),
         title: const Text(
-          'Rutina Semanal',
+          'Rutinas administrador',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -156,13 +194,9 @@ class RutinasScreenAdminState extends State<RutinasScreenAdmin> {
           return _buildRoutineCard(index);
         },
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+      bottomNavigationBar: CustomBottomNavbarAdmin(
+        currentIndex: _currentIndex,
+        onTap: _onTap, // Pasamos el método _onTap para que se actualice el índice
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addRoutine,

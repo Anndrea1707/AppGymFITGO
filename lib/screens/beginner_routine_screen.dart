@@ -23,7 +23,7 @@ class _BeginnerRoutineScreenState extends State<BeginnerRoutineScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false, // Eliminar el botón de retroceso
         title: const Text(
-          'Rutina recomendad del Mes',
+          'Rutina recomendada del Mes',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.deepPurple,

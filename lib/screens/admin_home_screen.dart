@@ -4,7 +4,10 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/login_screen.dart';
 import 'package:gym_fitgo/screens/users_screen_admin.dart';
-import 'package:gym_fitgo/screens/statistics_screen.dart'; // Pantalla de estadísticas
+import 'package:gym_fitgo/screens/profile_admin.dart';
+import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
+import 'package:gym_fitgo/screens/admin_rutins_screen.dart';
+import 'package:gym_fitgo/screens/statistics_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   @override
@@ -17,116 +20,152 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  void _onNavBarTapped(int index) {
+  // Función para manejar la navegación de la barra de navegación
+  void _onTap(int index) {
     setState(() {
       _selectedIndex = index;
     });
+
+    switch (index) {
+      case 0:
+        // Ya estamos en esta pantalla, no es necesario navegar
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AdminRutinsScreen()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ChallengesScreenAdmin()),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileAdmin()),
+        );
+        break;
+    }
+  }
+
+  // Interceptar el botón de retroceso
+  Future<bool> _onWillPop() async {
+    // Retornar false para evitar que el usuario regrese a la pantalla anterior
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF0a0322),
-      appBar: AppBar(
-        backgroundColor: Color(0xFFF5EDE4),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: TextField(
-          decoration: InputDecoration(
-            hintText: "Search here ...",
-            border: InputBorder.none,
-            prefixIcon: Icon(Icons.search),
-          ),
-        ),
-        actions: [
-          GestureDetector(
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                "images/mancuerna.png",
-                width: 32,
-                height: 32,
-              ),
+    return WillPopScope(
+      onWillPop: _onWillPop, // Intercepta el evento de retroceso
+      child: Scaffold(
+        backgroundColor: Color(0xFF0a0322),
+        appBar: AppBar(
+          backgroundColor: Color(0xFFF5EDE4),
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: TextField(
+            decoration: InputDecoration(
+              hintText: "Search here ...",
+              border: InputBorder.none,
+              prefixIcon: Icon(Icons.search),
             ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Imagen de bienvenida
-              Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: DecorationImage(
-                        image: AssetImage('images/adminWelcome.jpeg'), // Imagen personalizada
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    child: Text(
-                      '¡Bienvenido Administrador!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+          actions: [
+            GestureDetector(
+              onTap: () {
+                // Aquí puedes implementar el cierre de sesión
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  "images/mancuerna.png",
+                  width: 32,
+                  height: 32,
+                ),
               ),
-              SizedBox(height: 20),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Imagen de bienvenida
+                Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        image: DecorationImage(
+                          image: AssetImage('images/adminWelcome.jpeg'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      child: Text(
+                        '¡Bienvenido Administrador!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
 
-              // Botones de funcionalidades
-              Text(
-                'Opciones de gestión',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              SizedBox(height: 10),
-              _buildCategoryButton('Recetas', Colors.white, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => NutritionTipsScreen_admin()),
-                );
-              }),
-              SizedBox(height: 10),
-              _buildCategoryButton('Gestión de Usuarios', Colors.white, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UsersScreenAdmin()),
-                );
-              }),
-              SizedBox(height: 10),
-              _buildCategoryButton('Estadísticas', Colors.white, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => StatisticsScreen()),
-                );
-              }),
-              _buildFunctionalCalendar(),
-            ],
+                // Botones de funcionalidades
+                Text(
+                  'Opciones de gestión',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                SizedBox(height: 10),
+                _buildCategoryButton('Recetas', Colors.white, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => NutritionTipsScreen_admin()),
+                  );
+                }),
+                SizedBox(height: 10),
+                _buildCategoryButton('Gestión de Usuarios', Colors.white, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UsersScreenAdmin()),
+                  );
+                }),
+                SizedBox(height: 10),
+                _buildCategoryButton('Estadísticas', Colors.white, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                  );
+                }),
+                _buildFunctionalCalendar(),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavbarAdmin(
-        currentIndex: _selectedIndex,
-        onTap: _onNavBarTapped,
+        bottomNavigationBar: CustomBottomNavbarAdmin(
+          currentIndex: _selectedIndex,
+          onTap: _onTap,
+        ),
       ),
     );
   }
