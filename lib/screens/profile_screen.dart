@@ -126,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text("Actualizar"),
+                child: const Text("Actualizar", style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
 
@@ -144,7 +144,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text("Ir a Gym Survey"),
+                child: const Text("Ver encuesta",
+                style: TextStyle(
+                  color: Colors.white
+                )
+                ),
               ),
               const SizedBox(height: 24),
 

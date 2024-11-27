@@ -183,8 +183,10 @@ class ChallengeDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF0a0322),
       appBar: AppBar(
         title: Text(challenge['name']),
+        backgroundColor: Color(0xFFF5EDE4),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
