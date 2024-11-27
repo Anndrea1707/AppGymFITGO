@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gym_fitgo/screens/rect_admin.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
-import 'package:gym_fitgo/screens/nutrition_tips_screen.dart';
+import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/login_screen.dart';
 import 'package:gym_fitgo/screens/users_screen_admin.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart'; // Pantalla de estadísticas
@@ -125,7 +124,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: CustomBottomNavbarAdmin(
         currentIndex: _selectedIndex,
         onTap: _onNavBarTapped,
       ),

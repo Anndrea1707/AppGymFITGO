@@ -92,7 +92,7 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0a0322),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Color(0xFFF5EDE4),
         title: Text(widget.day),
         centerTitle: true,
         leading: IconButton(
@@ -218,10 +218,6 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (index) {},
       ),
     );
   }

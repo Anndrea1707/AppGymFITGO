@@ -15,12 +15,13 @@ class RutinasScreenState extends State<RutinasScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 21, 2, 34), // Fondo oscuro
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 152, 51, 211),
+        backgroundColor: const Color(0xFFF5EDE4),
         title: const Text(
           'Rutina Semanal',
-          style: TextStyle(color: Color.fromARGB(255, 248, 247, 247)),
+          style: TextStyle(color: Colors.black), 
         ),
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
