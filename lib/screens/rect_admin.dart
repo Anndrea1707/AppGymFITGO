@@ -6,7 +6,6 @@ import 'package:gym_fitgo/widgets/appBar_widget.dart';
 import 'package:gym_fitgo/widgets/categories_widget.dart';
 import 'package:gym_fitgo/widgets/popular_items_widget.dart';
 import 'package:gym_fitgo/widgets/newest_item_widget.dart';
-import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class NutritionTipsScreen_admin extends StatefulWidget {
@@ -15,22 +14,12 @@ class NutritionTipsScreen_admin extends StatefulWidget {
 }
 
 class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
-  int _selectedIndex = 0; // Añadimos el índice seleccionado
-
-  void _onNavBarTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF0a0322),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavBarTapped,
-      ),
+
       body: ListView(
         children: [
           // Custom App Bar Widget
