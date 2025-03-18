@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
-import 'exercise_description_screen.dart'; // Asegúrate de importar esta pantalla
+import 'exercise_description_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart';
 
@@ -11,14 +12,13 @@ class AdminRutinsScreen extends StatefulWidget {
 }
 
 class RutinasScreenAdminState extends State<AdminRutinsScreen> {
-  int _currentIndex = 1; // Inicializa el índice en 1 porque esta es la pantalla de Rutinas
+  int _currentIndex = 1;
 
   void _onTap(int index) {
     setState(() {
       _currentIndex = index;
     });
 
-    // Navegación de la barra de navegación
     switch (index) {
       case 0:
         Navigator.pushReplacement(
@@ -27,7 +27,6 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
         );
         break;
       case 1:
-        // Ya estamos en esta pantalla, no es necesario navegar
         break;
       case 2:
         Navigator.pushReplacement(
@@ -44,77 +43,16 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
     }
   }
 
-  // Lista de rutinas predefinidas
-  List<Map<String, dynamic>> routines = [
-    {
-      'day': 'Día 1',
-      'description': 'Rutina de piernas y glúteos',
-      'exercises': [
-        'Flexión de rodilla: 3x20',
-        'Prensa de piernas: 3x20',
-        'Front squat: 3x20',
-        'Squat jump: 3x20'
-      ],
-      'image':
-          'https://homeworkouts.org/wp-content/uploads/anim-dumbbell-deadlifts.gif'
-    },
-    {
-      'day': 'Día 2',
-      'description': 'Rutina de espalda y brazos',
-      'exercises': [
-        'Dominadas: 3x12',
-        'Remo con mancuernas: 3x15',
-        'Curl de bíceps: 3x12',
-        'Press de hombro: 3x12'
-      ],
-      'image':
-          'https://www.fitundattraktiv.de/wp-content/uploads/2017/09/latziehen_enger_griff-neutrales_griffstueck.gif'
-    },
-    {
-      'day': 'Día 3',
-      'description': 'Rutina de piernas y cuadriceps',
-      'exercises': [
-        'Sentadilla búlgara: 3x12',
-        'Extensiones de pierna: 3x15',
-        'Peso muerto: 3x15',
-        'Lunges: 3x20'
-      ],
-      'image':
-          'https://liftmanual.com/wp-content/uploads/2023/04/squat-mobility.gif'
-    },
-    {
-      'day': 'Día 4',
-      'description': 'Rutina de pecho y hombros',
-      'exercises': [
-        'Press de banca: 3x12',
-        'Aperturas: 3x15',
-        'Elevaciones laterales: 3x12',
-        'Flexiones: 3x20'
-      ],
-      'image':
-          'https://i.pinimg.com/originals/8b/d3/74/8bd3745dca0749b912b08b0d4bca3833.gif'
-    },
-    {
-      'day': 'Día 5',
-      'description': 'Rutina de abdomen y core',
-      'exercises': [
-        'Plancha: 3x1 min',
-        'Crunches: 3x20',
-        'Russian twists: 3x20',
-        'Levantamiento de piernas: 3x15'
-      ],
-      'image':
-          'https://fitliferegime.com/wp-content/uploads/2024/06/Hanging-Knee-Raise.gif'
-    },
-  ];
-
   // Controladores para el formulario
   final TextEditingController _dayController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _exercisesController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
 
-  // Método para agregar una nueva rutina
+  // Referencia a la colección de Firestore
+  final CollectionReference _routinesCollection =
+      FirebaseFirestore.instance.collection('RutinasAdmin');
+
   void _addRoutine() {
     showDialog(
       context: context,
@@ -151,20 +89,34 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
               child: Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  routines.add({
-                    'day': _dayController.text,
-                    'description': _descriptionController.text,
-                    'exercises': _exercisesController.text.split(','),
-                    'image': _imageUrlController.text,
+              onPressed: () async {
+                try {
+                  await _routinesCollection.add({
+                    'day': _dayController.text.isEmpty ? 'Sin día' : _dayController.text,
+                    'description': _descriptionController.text.isEmpty ? 'Sin descripción' : _descriptionController.text,
+                    'exercises': _exercisesController.text.isEmpty
+                        ? ['Sin ejercicios']
+                        : _exercisesController.text.split(',').map((e) => e.trim()).toList(),
+                    'image': _imageUrlController.text.isEmpty
+                        ? 'https://via.placeholder.com/100'
+                        : _imageUrlController.text,
                   });
-                });
-                _dayController.clear();
-                _descriptionController.clear();
-                _exercisesController.clear();
-                _imageUrlController.clear();
-                Navigator.pop(context);
+
+                  _dayController.clear();
+                  _descriptionController.clear();
+                  _exercisesController.clear();
+                  _imageUrlController.clear();
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Rutina agregada con éxito')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al agregar rutina: $e')),
+                  );
+                }
               },
               child: Text('Agregar'),
             ),
@@ -172,6 +124,41 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
         );
       },
     );
+  }
+
+  void _deleteRoutine(String routineId) async {
+    bool? confirmDelete = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirmar eliminación'),
+          content: Text('¿Estás seguro de que quieres eliminar esta rutina?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete == true) {
+      try {
+        await _routinesCollection.doc(routineId).delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rutina eliminada con éxito')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar rutina: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -187,16 +174,32 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: routines.length,
-        itemBuilder: (context, index) {
-          return _buildRoutineCard(index);
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _routinesCollection.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          var routines = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: routines.length,
+            itemBuilder: (context, index) {
+              var routineDoc = routines[index];
+              var routine = routineDoc.data() as Map<String, dynamic>? ?? {};
+              return _buildRoutineCard(routine, routineDoc.id);
+            },
+          );
         },
       ),
       bottomNavigationBar: CustomBottomNavbarAdmin(
         currentIndex: _currentIndex,
-        onTap: _onTap, // Pasamos el método _onTap para que se actualice el índice
+        onTap: _onTap,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addRoutine,
@@ -206,8 +209,14 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
     );
   }
 
-  Widget _buildRoutineCard(int index) {
-    var routine = routines[index];
+  Widget _buildRoutineCard(Map<String, dynamic> routine, String routineId) {
+    // Manejo de valores null con valores por defecto
+    final day = routine['day']?.toString() ?? 'Sin día';
+    final description = routine['description']?.toString() ?? 'Sin descripción';
+    final exercises = routine['exercises'] is List
+        ? List<String>.from(routine['exercises'].map((e) => e?.toString() ?? 'Sin ejercicio'))
+        : ['Sin ejercicios'];
+    final image = routine['image']?.toString() ?? 'https://via.placeholder.com/100';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -222,10 +231,13 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(15.0),
               child: Image.network(
-                routine['image'],
+                image,
                 width: 100,
                 height: 100,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.error, size: 100, color: Colors.white);
+                },
               ),
             ),
             const SizedBox(width: 16),
@@ -234,7 +246,7 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    routine['day'],
+                    day,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -243,31 +255,41 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    routine['description'],
+                    description,
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ExerciseDescriptionScreen(
-                            day: routine['day'],
-                            description: routine['description'],
-                            exercises: routine['exercises'],
-                            image: routine['image'],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ExerciseDescriptionScreen(
+                                day: day,
+                                description: description,
+                                exercises: exercises,
+                                image: image,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 192, 125, 204),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 192, 125, 204),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
+                        child: const Text('Ver rutina'),
                       ),
-                    ),
-                    child: const Text('Ver rutina'),
+                      IconButton(
+                        onPressed: () => _deleteRoutine(routineId),
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        tooltip: 'Eliminar rutina',
+                      ),
+                    ],
                   ),
                 ],
               ),
