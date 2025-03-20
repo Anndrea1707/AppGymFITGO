@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_fitgo/screens/beginner_routine_screen.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
+import 'package:gym_fitgo/screens/register_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -87,6 +89,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  );
+                },
+                child: Text(
+                  "¿No tienes cuenta? Regístrate",
+                  style: TextStyle(
+                    color: Colors.orangeAccent,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -106,6 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
           .get();
 
       if (userDoc.docs.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_email', email); // Guardar el email
+
         if (email == 'gymfitgo8@gmail.com') {
           Navigator.pushReplacement(
             context,

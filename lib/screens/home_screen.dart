@@ -12,11 +12,6 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-// Función para programar la notificación automática
-void _scheduleNotification() async {
-  await Future.delayed(Duration(seconds: 10)); // Retraso de 10 segundos
-  await mostrarNotificacion(); // Llama a la función para mostrar la notificación
-}
 
 class _HomeScreenState extends State<HomeScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gym_fitgo/screens/home_screen.dart';
-import 'package:gym_fitgo/services/notification_services.dart';
 
 class BeginnerRoutineScreen extends StatefulWidget {
   const BeginnerRoutineScreen({super.key});
@@ -8,11 +7,7 @@ class BeginnerRoutineScreen extends StatefulWidget {
   @override
   State<BeginnerRoutineScreen> createState() => _BeginnerRoutineScreenState();
 }
-// Función para programar la notificación automática
-void _scheduleNotification() async {
-  await Future.delayed(Duration(seconds: 10)); // Retraso de 10 segundos
-  await mostrarNotificacion(); // Llama a la función para mostrar la notificación
-}
+
 
 class _BeginnerRoutineScreenState extends State<BeginnerRoutineScreen> {
   @override
@@ -86,7 +81,7 @@ class _BeginnerRoutineScreenState extends State<BeginnerRoutineScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
               ),
               child: const Text(
-                'Finalizada',
+                'Continuar',
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),

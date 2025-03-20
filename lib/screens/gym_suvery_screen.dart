@@ -69,7 +69,7 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Registra tus Datos'),
+        title: Text('Actualiza tus Datos'),
         centerTitle: true,
       ),
       body: Padding(

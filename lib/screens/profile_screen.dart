@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_fitgo/screens/home_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen.dart';
 import 'package:gym_fitgo/screens/rutinas_screen.dart';
 import 'package:gym_fitgo/screens/gym_suvery_screen.dart';
-import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart'; // Asegúrate de importar tu CustomBottomNavBar
+import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -13,32 +13,53 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 3; // Índice actual para el botón "Perfil"
-  String name = '';
+  int _currentIndex = 3;
+  String name = 'Cargando...';
   int age = 0;
   double weight = 0;
   double height = 0;
+  String email = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadUserEmail();
   }
 
-  Future<void> _loadUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('Usuarios')
-          .doc(user.uid)
+  Future<void> _loadUserEmail() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedEmail = prefs.getString('user_email');
+    if (storedEmail != null) {
+      setState(() {
+        email = storedEmail;
+      });
+      _loadUserData(storedEmail);
+    }
+  }
+
+  Future<void> _loadUserData(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('user_email');
+
+    if (email != null) {
+      QuerySnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: email)
           .get();
-      if (userDoc.exists) {
-        var data = userDoc.data() as Map<String, dynamic>;
+
+      if (userDoc.docs.isNotEmpty) {
+        var data = userDoc.docs.first.data() as Map<String, dynamic>;
         setState(() {
-          name = data['name'] ?? '';
-          age = data['age'] ?? 0;
-          weight = data['weight']?.toDouble() ?? 0.0;
-          height = data['height']?.toDouble() ?? 0.0;
+          name = data['name'] ?? 'Sin nombre';
+          age = data['age'] != null
+              ? int.tryParse(data['age'].toString()) ?? 0
+              : 0;
+          weight = data['weight'] != null
+              ? double.tryParse(data['weight'].toString()) ?? 0.0
+              : 0.0;
+          height = data['height'] != null
+              ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100
+              : 0.0;
         });
       }
     }
@@ -52,21 +73,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     switch (index) {
       case 0:
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
         break;
       case 1:
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => RutinasScreen()),
-        );
+            context, MaterialPageRoute(builder: (context) => RutinasScreen()));
         break;
       case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ChallengesScreen()),
-        );
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (co1ntext) => ChallengesScreen()));
         break;
       case 3:
         break;
@@ -94,19 +109,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      name.isEmpty ? "Cargando..." : name,
+                      name,
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold),
                     ),
                     Text(
                       "Nivel: principiante",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ],
                 ),
@@ -120,75 +131,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildUserDetail(
                       "Peso", weight > 0 ? "$weight kg" : "Cargando..."),
                   _buildUserDetail(
-                      "Altura", height > 0 ? "$height m" : "Cargando..."),
+                      "Altura",
+                      height > 0
+                          ? "${height.toStringAsFixed(2)} m"
+                          : "Cargando..."),
                   _buildUserDetail("Fecha inicio", "03/03/2024"),
                 ],
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7E57C2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text("Actualizar",
-                    style: TextStyle(color: Colors.white)),
-              ),
-              const SizedBox(height: 24),
-
-              // Botón para redirigir a GymSurveyScreen
-              ElevatedButton(
                 onPressed: () {
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            GymSurveyScreen()), // Navegar a GymSurveyScreen
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => GymSurveyScreen()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7E57C2),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text("Ver encuesta",
+                child: const Text("Actualizar",
                     style: TextStyle(color: Colors.white)),
-              ),
-              const SizedBox(height: 24),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Días entrenamiento",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
-                              .map((day) => Chip(
-                                    label: Text(day),
-                                    backgroundColor: Colors.purple.shade200,
-                                  ))
-                              .toList(),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 24),
               _buildSection("Retos participación"),
@@ -208,15 +172,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildUserDetail(String title, String value) {
     return Column(
       children: [
-        Text(
-          title,
-          style: TextStyle(color: Colors.white70, fontSize: 14),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        Text(title, style: TextStyle(color: Colors.white70, fontSize: 14)),
+        Text(value,
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -225,14 +186,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text(title,
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -249,29 +207,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       width: 150,
       decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(12),
-      ),
+          color: Colors.white10, borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(title,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
-          ),
+          Text(subtitle, style: TextStyle(color: Colors.white70, fontSize: 12)),
         ],
       ),
     );
