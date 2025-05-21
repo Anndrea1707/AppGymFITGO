@@ -4,7 +4,7 @@ import 'package:gym_fitgo/screens/beginner_routine_screen.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
 import 'package:gym_fitgo/screens/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:firebase_crashlytics/firebase_crashlytics.dart'; // Importa Crashlytics
 
 class MyApp extends StatelessWidget {
   @override
@@ -86,6 +86,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Text(
                   "Iniciar sesión",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              SizedBox(height: 10),
+              // Botón de prueba para Crashlytics
+              ElevatedButton(
+                onPressed: () {
+                  FirebaseCrashlytics.instance.crash();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red, // Color diferente para distinguirlo
+                ),
+                child: Text(
+                  "Probar Crash",
                   style: TextStyle(color: Colors.white),
                 ),
               ),
