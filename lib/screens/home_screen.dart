@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => NutritionTipsScreen()),
+                            builder: (context) => NutritionTipsScreen_admin()),
                       );
                     }),
                     SizedBox(width: 10),

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
-import 'exercise_description_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart';
+import 'package:gym_fitgo/screens/add_routine_screen.dart';
+import 'package:gym_fitgo/screens/routine_detail_screen.dart';
+import 'package:intl/intl.dart';
 
 class AdminRutinsScreen extends StatefulWidget {
   @override
@@ -18,7 +20,6 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
     setState(() {
       _currentIndex = index;
     });
-
     switch (index) {
       case 0:
         Navigator.pushReplacement(
@@ -41,89 +42,6 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
         );
         break;
     }
-  }
-
-  // Controladores para el formulario
-  final TextEditingController _dayController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _exercisesController = TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
-
-  // Referencia a la colección de Firestore
-  final CollectionReference _routinesCollection =
-      FirebaseFirestore.instance.collection('RutinasAdmin');
-
-  void _addRoutine() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Agregar Nueva Rutina'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _dayController,
-                decoration: InputDecoration(labelText: 'Día'),
-              ),
-              TextField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
-              ),
-              TextField(
-                controller: _exercisesController,
-                decoration: InputDecoration(
-                    labelText: 'Ejercicios (separados por coma)'),
-              ),
-              TextField(
-                controller: _imageUrlController,
-                decoration: InputDecoration(labelText: 'URL de la imagen'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  await _routinesCollection.add({
-                    'day': _dayController.text.isEmpty ? 'Sin día' : _dayController.text,
-                    'description': _descriptionController.text.isEmpty ? 'Sin descripción' : _descriptionController.text,
-                    'exercises': _exercisesController.text.isEmpty
-                        ? ['Sin ejercicios']
-                        : _exercisesController.text.split(',').map((e) => e.trim()).toList(),
-                    'image': _imageUrlController.text.isEmpty
-                        ? 'https://via.placeholder.com/100'
-                        : _imageUrlController.text,
-                  });
-
-                  _dayController.clear();
-                  _descriptionController.clear();
-                  _exercisesController.clear();
-                  _imageUrlController.clear();
-
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Rutina agregada con éxito')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al agregar rutina: $e')),
-                  );
-                }
-              },
-              child: Text('Agregar'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _deleteRoutine(String routineId) async {
@@ -149,7 +67,10 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
 
     if (confirmDelete == true) {
       try {
-        await _routinesCollection.doc(routineId).delete();
+        await FirebaseFirestore.instance
+            .collection('Rutinas')
+            .doc(routineId)
+            .delete();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Rutina eliminada con éxito')),
         );
@@ -174,125 +95,207 @@ class RutinasScreenAdminState extends State<AdminRutinsScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _routinesCollection.snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+      body: Stack(
+        children: [
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('Rutinas').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-          var routines = snapshot.data!.docs;
+              var routines = snapshot.data!.docs;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: routines.length,
-            itemBuilder: (context, index) {
-              var routineDoc = routines[index];
-              var routine = routineDoc.data() as Map<String, dynamic>? ?? {};
-              return _buildRoutineCard(routine, routineDoc.id);
+              // Agrupar rutinas por userName
+              Map<String, List<Map<String, dynamic>>> groupedRoutines = {};
+              for (var doc in routines) {
+                var routine = doc.data() as Map<String, dynamic>;
+                var userName = routine['userName']?.toString() ?? 'Sin usuario';
+                if (!groupedRoutines.containsKey(userName)) {
+                  groupedRoutines[userName] = [];
+                }
+                groupedRoutines[userName]!.add({
+                  'routine': routine,
+                  'id': doc.id,
+                });
+              }
+
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16.0, 30.0, 16.0, 16.0),
+                children: groupedRoutines.entries.map((entry) {
+                  String userName = entry.key;
+                  List<Map<String, dynamic>> userRoutines = entry.value;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ...userRoutines.map((routineData) {
+                        var routine = routineData['routine'] as Map<String, dynamic>;
+                        var routineId = routineData['id'] as String;
+                        return _buildRoutineCard(routine, routineId, userName);
+                      }).toList(),
+                      const SizedBox(height: 20),
+                    ],
+                  );
+                }).toList(),
+              );
             },
-          );
-        },
+          ),
+          Positioned(
+            top: 60.0,
+            right: 16.0,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddRoutineScreen(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.purple[300],
+              child: Icon(Icons.add),
+              elevation: 6.0,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: CustomBottomNavbarAdmin(
         currentIndex: _currentIndex,
         onTap: _onTap,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addRoutine,
-        backgroundColor: Colors.purple,
-        child: Icon(Icons.add),
-      ),
     );
   }
 
-  Widget _buildRoutineCard(Map<String, dynamic> routine, String routineId) {
-    // Manejo de valores null con valores por defecto
-    final day = routine['day']?.toString() ?? 'Sin día';
-    final description = routine['description']?.toString() ?? 'Sin descripción';
-    final exercises = routine['exercises'] is List
-        ? List<String>.from(routine['exercises'].map((e) => e?.toString() ?? 'Sin ejercicio'))
-        : ['Sin ejercicios'];
-    final image = routine['image']?.toString() ?? 'https://via.placeholder.com/100';
+  Widget _buildRoutineCard(Map<String, dynamic> routine, String routineId, String userName) {
+    // Definir todas las variables de manera explícita
+    final String name = routine['name']?.toString() ?? 'Sin día';
+    final String description = routine['description']?.toString() ?? 'Sin descripción';
+    final List<Map<String, dynamic>> exercisesList = (routine['exercises'] as List<dynamic>?)?.map((e) {
+      return e as Map<String, dynamic>;
+    }).toList() ?? [];
+    final dynamic createdAtValue = routine['createdAt'] ?? Timestamp.now();
+    final dynamic expirationDateValue = routine['expirationDate'] ?? Timestamp.now();
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Colors.grey[850],
+      margin: const EdgeInsets.symmetric(vertical: 10.0),
+      color: const Color.fromARGB(255, 87, 37, 116),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(16.0),
       ),
+      elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15.0),
-              child: Image.network(
-                image,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.error, size: 100, color: Colors.white);
-                },
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    day,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, color: Colors.white70, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  'Vence: ${expirationDateValue is Timestamp ? DateFormat('dd/MM/yyyy').format(expirationDateValue.toDate()) : 'Sin fecha'}',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ExerciseDescriptionScreen(
-                                day: day,
-                                description: description,
-                                exercises: exercises,
-                                image: image,
-                              ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RoutineDetailScreen(
+                              day: name,
+                              description: description,
+                              exercises: exercisesList,
+                              image: '',
+                              userName: userName,
+                              createdAt: createdAtValue,
+                              expirationDate: expirationDateValue,
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 192, 125, 204),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
                           ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
                         ),
-                        child: const Text('Ver rutina'),
                       ),
-                      IconButton(
-                        onPressed: () => _deleteRoutine(routineId),
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        tooltip: 'Eliminar rutina',
+                      child: const Text('Ver rutina'),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddRoutineScreen(
+                              routineId: routineId,
+                              routineData: routine,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                      child: const Text('Editar rutina'),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () => _deleteRoutine(routineId),
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: 'Eliminar rutina',
+                ),
+              ],
             ),
           ],
         ),

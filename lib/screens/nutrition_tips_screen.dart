@@ -1,44 +1,308 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_fitgo/screens/add_recet_admin.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:gym_fitgo/widgets/appBar_widget.dart';
-import 'package:gym_fitgo/widgets/categories_widget.dart';
-import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
-import 'package:gym_fitgo/screens/home_screen.dart'; // Asegúrate de importar la pantalla HomeScreen
+import 'package:image_picker/image_picker.dart';
+import 'package:cloudinary_public/cloudinary_public.dart';
 
-class NutritionTipsScreen extends StatefulWidget {
+class NutritionTipsScreen_admin extends StatefulWidget {
   @override
   NutritionTipsScreenState createState() => NutritionTipsScreenState();
 }
 
-class NutritionTipsScreenState extends State<NutritionTipsScreen> {
-  int _selectedIndex = 0; // Índice seleccionado para la barra de navegación
-  final Set<String> _favorites = {}; // Almacena recetas marcadas como favoritas
+class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
+  final CloudinaryPublic cloudinary = CloudinaryPublic('dycjb5ovf', 'FitgoApp', cache: false);
+  bool _isUploading = false;
+
+  Future<void> _updateRating(String recetaId, double rating) async {
+    try {
+      await FirebaseFirestore.instance.collection('recetas').doc(recetaId).update({
+        'rating': rating,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Calificación actualizada')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar calificación: $e')),
+      );
+    }
+  }
+
+  Future<void> _eliminarReceta(String id) async {
+    await FirebaseFirestore.instance.collection('recetas').doc(id).delete();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Receta eliminada exitosamente")),
+    );
+  }
+
+  Future<void> _editarReceta(String id, Map<String, dynamic> updatedData) async {
+    await FirebaseFirestore.instance.collection('recetas').doc(id).update(updatedData);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Receta actualizada exitosamente")),
+    );
+  }
+
+  void _showEditDialog(String id, Map<String, dynamic> recetaData) {
+    final TextEditingController _editNombreController = TextEditingController(text: recetaData['nombre']);
+    final TextEditingController _editDescripcionController = TextEditingController(text: recetaData['descripcion']);
+    final TextEditingController _editProteinaController = TextEditingController(text: recetaData['proteina'].toString());
+    String? _editImageUrl = recetaData['imagenUrl'];
+    String? _newImageUrl;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Editar Receta'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _editNombreController,
+                  decoration: InputDecoration(labelText: 'Nombre'),
+                ),
+                TextField(
+                  controller: _editDescripcionController,
+                  decoration: InputDecoration(labelText: 'Descripción'),
+                ),
+                TextField(
+                  controller: _editProteinaController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Proteína (g)'),
+                ),
+                SizedBox(height: 10),
+                Text('Imagen actual:'),
+                if (_editImageUrl != null)
+                  Image.network(
+                    _editImageUrl,
+                    height: 100,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.error);
+                    },
+                  ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _isUploading
+                      ? null
+                      : () async {
+                          final picker = ImagePicker();
+                          final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                          if (pickedFile != null) {
+                            setState(() {
+                              _isUploading = true;
+                            });
+                            try {
+                              final response = await cloudinary.uploadFile(
+                                CloudinaryFile.fromFile(pickedFile.path, resourceType: CloudinaryResourceType.Image),
+                              );
+                              _newImageUrl = response.secureUrl;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Nueva imagen subida exitosamente')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error al subir imagen: $e')),
+                              );
+                            } finally {
+                              setState(() {
+                                _isUploading = false;
+                              });
+                            }
+                          }
+                        },
+                  child: _isUploading
+                      ? CircularProgressIndicator()
+                      : Text('Seleccionar Nueva Imagen'),
+                ),
+                if (_newImageUrl != null) ...[
+                  SizedBox(height: 10),
+                  Text('Nueva imagen:'),
+                  Image.network(
+                    _newImageUrl!,
+                    height: 100,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.error);
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_editNombreController.text.isNotEmpty &&
+                    _editDescripcionController.text.isNotEmpty &&
+                    _editProteinaController.text.isNotEmpty &&
+                    (_editImageUrl != null || _newImageUrl != null)) {
+                  try {
+                    int proteina = int.tryParse(_editProteinaController.text) ?? -1;
+                    if (proteina < 0) {
+                      throw FormatException('Por favor, ingresa un valor numérico válido para la proteína');
+                    }
+                    final updatedData = {
+                      'nombre': _editNombreController.text,
+                      'descripcion': _editDescripcionController.text,
+                      'proteina': proteina,
+                      'imagenUrl': _newImageUrl ?? _editImageUrl,
+                      'rating': recetaData['rating'] ?? 0.0,
+                    };
+                    _editarReceta(id, updatedData);
+                    Navigator.pop(context);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al actualizar receta: $e')),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor, completa todos los campos')),
+                  );
+                }
+              },
+              child: Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0a0322),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF5EDE4),
+        elevation: 0,
+        title: const Text(
+          'Recetas',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+      ),
+      body: ListView(
+        children: [
+          // Search
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 15,
+            ),
+            child: Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5EDE4),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    const Icon(
+                      CupertinoIcons.search,
+                      color: Colors.white,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: TextFormField(
+                          decoration: const InputDecoration(
+                            hintText: "Buscar",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Título de Recetas Agregadas
+          const Padding(
+            padding: EdgeInsets.only(top: 20, left: 10),
+            child: Text(
+              "Recetas Agregadas",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Color(0xFFF5EDE4),
+              ),
+            ),
+          ),
+
+          // Recetas desde Firestore
+          _buildRecetasList(),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF5EDE4),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddRecet()),
+                );
+              },
+              child: const Text(
+                "Agregar Receta",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _onNavBarTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  // Método para construir las tarjetas de recetas
-  Widget _buildRecetasCards() {
+  Widget _buildRecetasList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('recetas').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(20),
+          return const Padding(
+            padding: EdgeInsets.all(20),
             child: Text(
               "No hay recetas disponibles.",
               style: TextStyle(color: Colors.white, fontSize: 16),
@@ -49,233 +313,132 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen> {
 
         final recetas = snapshot.data!.docs;
 
-        return ListView.builder(
-          physics: NeverScrollableScrollPhysics(), // Evitar conflictos de scroll
-          shrinkWrap: true, // Para adaptarse dentro del ListView principal
-          itemCount: recetas.length,
-          itemBuilder: (context, index) {
-            final receta = recetas[index];
-            final data = receta.data() as Map<String, dynamic>;
-            final isFavorite = _favorites.contains(receta.id);
+        return Column(
+          children: recetas.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              color: Color(0xFFF5EDE4), // Fondo beige claro
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Imagen de la receta
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        image: DecorationImage(
-                          image: NetworkImage(data['imagenUrl'] ?? ''),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
+            final proteina = data['proteina'] != null
+                ? (data['proteina'] is int
+                    ? (data['proteina'] as int).toDouble()
+                    : (data['proteina'] as double))
+                : 0.0;
 
-                    // Información de la receta
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data['nombre'] ?? 'Sin nombre',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            data['descripcion'] ?? 'Sin descripción',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            "Proteína: ${data['proteina']}g",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          SizedBox(height: 5),
+            final rating = data['rating']?.toDouble() ?? 0.0;
 
-                          // Rating bar
-                          RatingBar.builder(
-                            initialRating: data['rating']?.toDouble() ?? 0,
-                            minRating: 1,
-                            direction: Axis.horizontal,
-                            allowHalfRating: true,
-                            itemCount: 5,
-                            itemSize: 20,
-                            itemBuilder: (context, _) => Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                            ),
-                            onRatingUpdate: (rating) {
-                              // No hacemos nada, solo para mostrar
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Icono de favorito
-                    IconButton(
-                      icon: Icon(
-                        isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                        color: isFavorite ? Colors.red : Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          if (isFavorite) {
-                            _favorites.remove(receta.id);
-                          } else {
-                            _favorites.add(receta.id);
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
+            return _buildRecetaCard(
+              docId: doc.id,
+              nombre: data['nombre'] ?? 'Sin nombre',
+              descripcion: data['descripcion'] ?? 'Sin descripción',
+              proteina: proteina,
+              imagenUrl: data['imagenUrl'] ?? '',
+              rating: rating,
             );
-          },
+          }).toList(),
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF0a0322), // Fondo morado oscuro
-
-      // Barra de navegación inferior
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavBarTapped,
+  Widget _buildRecetaCard({
+    required String docId,
+    required String nombre,
+    required String descripcion,
+    required double proteina,
+    required String imagenUrl,
+    required double rating,
+  }) {
+    return Card(
+      color: const Color(0xFFF5EDE4),
+      margin: const EdgeInsets.only(bottom: 15, left: 15, right: 15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
       ),
-      body: ListView(
-        children: [
-          // Encabezado con el título y la flecha de regreso
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(CupertinoIcons.back, color: Colors.white),
-                  onPressed: () {
-                    // Redirige a la pantalla de inicio
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imagenUrl,
+                height: 80,
+                width: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.broken_image,
+                  size: 80,
+                  color: Colors.grey,
                 ),
-                SizedBox(width: 10),
-                Text(
-                  "Consejos alimenticios",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nombre,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Search
-          Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: 10,
-              horizontal: 15,
-            ),
-            child: Container(
-              width: double.infinity,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Color(0xFFF5EDE4),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
+                  Text(
+                    descripcion,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Pr. ${proteina.toStringAsFixed(1)}g",
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  RatingBar.builder(
+                    initialRating: rating,
+                    minRating: 0,
+                    direction: Axis.horizontal,
+                    allowHalfRating: true,
+                    itemCount: 5,
+                    itemSize: 18,
+                    itemPadding: const EdgeInsets.symmetric(horizontal: 1.0),
+                    itemBuilder: (context, _) => Icon(
+                      Icons.star,
+                      color: rating > 0 ? Colors.amber : Colors.grey,
+                    ),
+                    onRatingUpdate: (rating) {
+                      _updateRating(docId, rating);
+                    },
                   ),
                 ],
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.search,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          hintText: "Buscar",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ],
+            ),
+            Column(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit, color: Colors.black),
+                  onPressed: () => _showEditDialog(docId, {
+                    'nombre': nombre,
+                    'descripcion': descripcion,
+                    'proteina': proteina,
+                    'imagenUrl': imagenUrl,
+                    'rating': rating,
+                  }),
                 ),
-              ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _eliminarReceta(docId),
+                ),
+              ],
             ),
-          ),
-
-          // Categoría
-          Padding(
-            padding: EdgeInsets.only(top: 20, left: 10),
-            child: Text(
-              "¿Qué tienes en tu cocina?",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Color(0xFFF5EDE4),
-              ),
-            ),
-          ),
-
-          // Categorías Widget
-          Categorieswidget(),
-
-          // Recetas desde Firestore
-          Padding(
-            padding: EdgeInsets.only(top: 20, left: 10),
-            child: Text(
-              "Recomendados para ti",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Color(0xFFF5EDE4),
-              ),
-            ),
-          ),
-          _buildRecetasCards(),
-        ],
+          ],
+        ),
       ),
     );
   }

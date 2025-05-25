@@ -45,6 +45,9 @@ dependencies:
   cloud_firestore: ^5.5.0
   shared_preferences: ^2.5.2
   firebase_crashlytics: ^4.3.5
+  cloudinary_public: ^0.23.1
+  image_picker: ^1.1.2
+  carousel_slider: ^5.0.0
 
 dev_dependencies:
   flutter_test:

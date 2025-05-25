@@ -16,9 +16,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 3;
   String name = 'Cargando...';
   int age = 0;
-  double weight = 0;
-  double height = 0;
+  double weight = 0.0;
+  double height = 0.0;
   String email = '';
+  String? gender;
+  String? limitation;
+  String? goal;
 
   @override
   void initState() {
@@ -29,19 +32,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedEmail = prefs.getString('user_email');
-    if (storedEmail != null) {
+    if (storedEmail != null && storedEmail.isNotEmpty) {
       setState(() {
         email = storedEmail;
       });
-      _loadUserData(storedEmail);
+      _loadUserData();
     }
   }
 
-  Future<void> _loadUserData(String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? email = prefs.getString('user_email');
-
-    if (email != null) {
+  Future<void> _loadUserData() async {
+    try {
       QuerySnapshot userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
           .where('email', isEqualTo: email)
@@ -51,17 +51,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         var data = userDoc.docs.first.data() as Map<String, dynamic>;
         setState(() {
           name = data['name'] ?? 'Sin nombre';
-          age = data['age'] != null
-              ? int.tryParse(data['age'].toString()) ?? 0
-              : 0;
-          weight = data['weight'] != null
-              ? double.tryParse(data['weight'].toString()) ?? 0.0
-              : 0.0;
-          height = data['height'] != null
-              ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100
-              : 0.0;
+          age = data['age'] != null ? int.tryParse(data['age'].toString()) ?? 0 : 0;
+          weight = data['weight'] != null ? double.tryParse(data['weight'].toString()) ?? 0.0 : 0.0;
+          height = data['height'] != null ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100 : 0.0;
+          gender = data['gender'];
+          limitation = data['limitation'];
+          goal = data['goal'];
         });
+      } else {
+        setState(() {
+          name = 'No se encontraron datos';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se encontraron datos para este email ($email) en Firestore.')),
+        );
       }
+    } catch (e) {
+      setState(() {
+        name = 'Error al cargar';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar datos: $e')),
+      );
     }
   }
 
@@ -80,8 +91,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context, MaterialPageRoute(builder: (context) => RutinasScreen()));
         break;
       case 2:
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (co1ntext) => ChallengesScreen()));
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => ChallengesScreen()));
         break;
       case 3:
         break;
@@ -104,18 +115,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundImage:
-                          AssetImage('assets/avatar_placeholder.png'),
+                      backgroundImage: const AssetImage('assets/avatar_placeholder.png'),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       name,
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold),
                     ),
-                    Text(
+                    const Text(
                       "Nivel: principiante",
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
@@ -126,15 +136,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildUserDetail(
-                      "Edad", age > 0 ? "$age años" : "Cargando..."),
-                  _buildUserDetail(
-                      "Peso", weight > 0 ? "$weight kg" : "Cargando..."),
-                  _buildUserDetail(
-                      "Altura",
-                      height > 0
-                          ? "${height.toStringAsFixed(2)} m"
-                          : "Cargando..."),
+                  _buildUserDetail("Edad", age > 0 ? "$age años" : "Cargando..."),
+                  _buildUserDetail("Peso", weight > 0 ? "$weight kg" : "Cargando..."),
+                  _buildUserDetail("Altura", height > 0 ? "${height.toStringAsFixed(2)} m" : "Cargando..."),
                   _buildUserDetail("Fecha inicio", "03/03/2024"),
                 ],
               ),
@@ -142,17 +146,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => GymSurveyScreen()));
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GymSurveyScreen(userEmail: email),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7E57C2),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text("Actualizar",
-                    style: TextStyle(color: Colors.white)),
+                child: const Text("Actualizar", style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
               _buildSection("Retos participación"),
@@ -172,9 +177,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildUserDetail(String title, String value) {
     return Column(
       children: [
-        Text(title, style: TextStyle(color: Colors.white70, fontSize: 14)),
+        Text(title, style: const TextStyle(color: Colors.white70, fontSize: 14)),
         Text(value,
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
@@ -187,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title,
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
@@ -213,12 +218,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12)),
         ],
       ),
     );

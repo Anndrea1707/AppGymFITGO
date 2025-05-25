@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gym_fitgo/screens/add_recet_admin.dart';
-import 'package:gym_fitgo/widgets/appBar_widget.dart';
-import 'package:gym_fitgo/widgets/categories_widget.dart';
-import 'package:gym_fitgo/widgets/popular_items_widget.dart';
-import 'package:gym_fitgo/widgets/newest_item_widget.dart';
+import 'package:gym_fitgo/screens/add_recet_admin.dart'; // Ajuste en la importación
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class NutritionTipsScreen_admin extends StatefulWidget {
@@ -14,20 +10,43 @@ class NutritionTipsScreen_admin extends StatefulWidget {
 }
 
 class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
+  Future<void> _updateRating(String recetaId, double rating) async {
+    try {
+      await FirebaseFirestore.instance.collection('recetas').doc(recetaId).update({
+        'rating': rating,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Calificación actualizada')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar calificación: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0a0322),
-
+      backgroundColor: const Color(0xFF0a0322),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF5EDE4),
+        elevation: 0,
+        title: const Text(
+          'Recetas',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+        automaticallyImplyLeading: true, // Habilita la flecha de retroceso
+      ),
       body: ListView(
         children: [
-          // Custom App Bar Widget
-          AppBarwidget(),
-
           // Search
           Padding(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               vertical: 10,
               horizontal: 15,
             ),
@@ -35,32 +54,30 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
               width: double.infinity,
               height: 50,
               decoration: BoxDecoration(
-                color: Color(0xFFF5EDE4),
+                color: const Color(0xFFF5EDE4),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.5),
                     spreadRadius: 2,
                     blurRadius: 10,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       CupertinoIcons.search,
                       color: Colors.white,
                     ),
-                    Container(
-                      height: 50,
-                      width: 300,
+                    Expanded(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15),
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: TextFormField(
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             hintText: "Buscar",
                             border: InputBorder.none,
                           ),
@@ -74,7 +91,7 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
           ),
 
           // Título de Recetas Agregadas
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(top: 20, left: 10),
             child: Text(
               "Recetas Agregadas",
@@ -90,14 +107,13 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
           _buildRecetasList(),
 
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFF5EDE4), // Beige claro para el fondo
-                padding: EdgeInsets.symmetric(
-                    vertical: 15), // Mismo tamaño de padding
+                backgroundColor: const Color(0xFFF5EDE4),
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: () {
@@ -106,12 +122,12 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
                   MaterialPageRoute(builder: (context) => AddRecet()),
                 );
               },
-              child: Text(
+              child: const Text(
                 "Agregar Receta",
                 style: TextStyle(
-                  fontSize: 16, // Mismo tamaño de letra
-                  color: Colors.black, // Letra oscura
-                  fontWeight: FontWeight.bold, // Letra en negrita
+                  fontSize: 16,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -126,10 +142,10 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
       stream: FirebaseFirestore.instance.collection('recetas').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Padding(
+          return const Padding(
             padding: EdgeInsets.all(20),
             child: Text(
               "No hay recetas disponibles.",
@@ -152,11 +168,16 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
                     : (data['proteina'] as double))
                 : 0.0;
 
+            // Manejo seguro del valor de 'rating'
+            final rating = data['rating']?.toDouble() ?? 0.0;
+
             return _buildRecetaCard(
+              docId: doc.id,
               nombre: data['nombre'] ?? 'Sin nombre',
               descripcion: data['descripcion'] ?? 'Sin descripción',
               proteina: proteina,
               imagenUrl: data['imagenUrl'] ?? '',
+              rating: rating,
             );
           }).toList(),
         );
@@ -165,14 +186,16 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
   }
 
   Widget _buildRecetaCard({
+    required String docId,
     required String nombre,
     required String descripcion,
     required double proteina,
     required String imagenUrl,
+    required double rating,
   }) {
     return Card(
-      color: Color(0xFFF5EDE4),
-      margin: EdgeInsets.only(bottom: 15, left: 15, right: 15),
+      color: const Color(0xFFF5EDE4),
+      margin: const EdgeInsets.only(bottom: 15, left: 15, right: 15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
@@ -180,7 +203,7 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
       child: Stack(
         children: [
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Row(
               children: [
                 ClipRRect(
@@ -190,21 +213,21 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
                     height: 80,
                     width: 80,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(
+                    errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.broken_image,
                       size: 80,
                       color: Colors.grey,
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         nombre,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -213,33 +236,32 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
                         descripcion,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: Colors.grey),
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Text(
                         "Pr. ${proteina.toStringAsFixed(1)}g",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.black87,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 5),
-                      
+                      const SizedBox(height: 5),
                       // RatingBar debajo de "Proteína"
                       RatingBar.builder(
-                        initialRating: 4, // Calificación predeterminada
-                        minRating: 1,
+                        initialRating: rating,
+                        minRating: 0,
                         direction: Axis.horizontal,
                         allowHalfRating: true,
                         itemCount: 5,
-                        itemSize: 18, // Tamaño de las estrellas
-                        itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                        itemSize: 18,
+                        itemPadding: const EdgeInsets.symmetric(horizontal: 1.0),
                         itemBuilder: (context, _) => Icon(
                           Icons.star,
-                          color: Colors.amber,
+                          color: rating > 0 ? Colors.amber : Colors.grey,
                         ),
                         onRatingUpdate: (rating) {
-                          print(rating);
+                          _updateRating(docId, rating);
                         },
                       ),
                     ],
@@ -249,12 +271,12 @@ class NutritionTipsScreenState extends State<NutritionTipsScreen_admin> {
             ),
           ),
           // Ícono del corazón en la parte superior derecha
-          Positioned(
+          const Positioned(
             top: 5,
             right: 5,
             child: Icon(
               Icons.favorite_border,
-              color: Colors.black, // Cambiado a negro
+              color: Colors.black,
             ),
           ),
         ],

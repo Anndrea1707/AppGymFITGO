@@ -11,20 +11,12 @@ class UsersScreenAdmin extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context); // Volver a la página anterior
-              },
-            ),
             const Text(
               'Usuarios Registrados',
               style: TextStyle(color: Colors.black),
             ),
           ],
         ),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [

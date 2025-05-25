@@ -1,54 +1,107 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:gym_fitgo/screens/beginner_routine_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GymSurveyScreen extends StatefulWidget {
+  final String userEmail;
+
+  const GymSurveyScreen({required this.userEmail, Key? key}) : super(key: key);
+
   @override
   _GymSurveyScreenState createState() => _GymSurveyScreenState();
 }
 
 class _GymSurveyScreenState extends State<GymSurveyScreen> {
-  double _weight = 70; // Peso inicial
+  double _weight = 70;
   double? _height;
   int? _age;
   String? _gender;
   String? _limitation;
   String? _goal;
 
-  // Función para guardar los datos en Firestore
-  Future<void> _saveData() async {
-    if (_age == null || _height == null || _gender == null || _limitation == null || _goal == null) {
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingData();
+  }
+
+  Future<void> _loadExistingData() async {
+    try {
+      QuerySnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: widget.userEmail)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        var data = userDoc.docs.first.data() as Map<String, dynamic>;
+        setState(() {
+          _age = data['age'] != null ? int.tryParse(data['age'].toString()) ?? 0 : null;
+          _weight = data['weight'] != null ? double.tryParse(data['weight'].toString()) ?? 70.0 : 70.0;
+          _height = data['height'] != null ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100 : null;
+          _gender = data['gender'];
+          _limitation = data['limitation'];
+          _goal = data['goal'];
+        });
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Por favor, completa todos los campos."),
+          content: Text("Error al cargar datos existentes: $e"),
           backgroundColor: Colors.red,
         ),
       );
-      return;
     }
+  }
 
+  Future<void> _saveData() async {
     try {
-      await FirebaseFirestore.instance.collection('usuarios').add({
-        'age': _age,
-        'weight': _weight,
-        'height': _height,
-        'gender': _gender,
-        'limitation': _limitation,
-        'goal': _goal,
-      });
+      QuerySnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: widget.userEmail)
+          .get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Datos guardados con éxito."),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (userDoc.docs.isNotEmpty) {
+        Map<String, dynamic> updatedData = {};
 
-      // Navegar a la pantalla de éxito
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => BeginnerRoutineScreen()),
-      );
+        // Solo agregar campos que hayan sido modificados o seleccionados
+        if (_age != null) updatedData['age'] = _age;
+        if (_weight != 70 || _weight != (userDoc.docs.first.data() as Map<String, dynamic>)['weight']) updatedData['weight'] = _weight;
+        if (_height != null) updatedData['height'] = _height! * 100; // Convertir a cm
+        if (_gender != null) updatedData['gender'] = _gender;
+        if (_limitation != null) updatedData['limitation'] = _limitation;
+        if (_goal != null) updatedData['goal'] = _goal;
+
+        if (updatedData.isNotEmpty) {
+          await FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(userDoc.docs.first.id)
+              .update(updatedData);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Datos guardados con éxito."),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("No se modificaron datos."),
+              backgroundColor: Colors.grey,
+            ),
+          );
+        }
+
+        // Regresar a la pantalla anterior (ProfileScreen o ProfileAdmin)
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("No se encontró el usuario con el email ${widget.userEmail}."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -62,20 +115,20 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0a0322), // Color de fondo personalizado
+      backgroundColor: const Color(0xFF0a0322),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5EDE4),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Actualiza tus Datos'),
+        title: const Text('Actualiza tus Datos'),
         centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
-          margin: EdgeInsets.all(20),
+          margin: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
@@ -84,16 +137,17 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 color: Colors.grey.withOpacity(0.5),
                 spreadRadius: 5,
                 blurRadius: 7,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: ListView(
             children: [
-              Text('¿Cuál es tu edad?', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 10),
+              const Text('¿Cuál es tu edad?', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 10),
               DropdownButtonFormField<int>(
+                value: _age,
                 items: List.generate(100, (index) => index + 18).map((int value) {
                   return DropdownMenuItem<int>(
                     value: value,
@@ -108,12 +162,13 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                hint: const Text('Selecciona tu edad'),
               ),
-              SizedBox(height: 20),
-              Text('Registra tu peso:', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              const Text('Registra tu peso:', style: TextStyle(fontSize: 18)),
               Slider(
                 value: _weight,
                 min: 40,
@@ -126,9 +181,10 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                   });
                 },
               ),
-              SizedBox(height: 20),
-              Text('¿Cuánto mides?', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              const Text('¿Cuánto mides?', style: TextStyle(fontSize: 18)),
               DropdownButtonFormField<double>(
+                value: _height,
                 items: List.generate(61, (index) => 1.20 + index * 0.01).map((double value) {
                   return DropdownMenuItem<double>(
                     value: value,
@@ -143,13 +199,15 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                hint: const Text('Selecciona tu altura'),
               ),
-              SizedBox(height: 20),
-              Text('Género:', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              const Text('Género:', style: TextStyle(fontSize: 18)),
               DropdownButtonFormField<String>(
+                value: _gender,
                 items: ['Masculino', 'Femenino', 'Otro'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -164,13 +222,15 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                hint: const Text('Selecciona tu género'),
               ),
-              SizedBox(height: 20),
-              Text('¿Tienes alguna limitación física?', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              const Text('¿Tienes alguna limitación física?', style: TextStyle(fontSize: 18)),
               DropdownButtonFormField<String>(
+                value: _limitation,
                 items: ['Sí', 'No'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -185,13 +245,15 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                hint: const Text('Selecciona una opción'),
               ),
-              SizedBox(height: 20),
-              Text('¿Qué quieres lograr?', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              const Text('¿Qué quieres lograr?', style: TextStyle(fontSize: 18)),
               DropdownButtonFormField<String>(
+                value: _goal,
                 items: ['Bajar de peso', 'Ganar masa muscular', 'Mantenerme saludable'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -206,18 +268,19 @@ class _GymSurveyScreenState extends State<GymSurveyScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color.fromARGB(255, 218, 214, 214),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                hint: const Text('Selecciona tu meta'),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.purpleAccent,
                 ),
                 onPressed: _saveData,
-                child: Text('Guardar', style: TextStyle(fontSize: 18, color: Colors.white)),
+                child: const Text('Guardar', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ],
           ),

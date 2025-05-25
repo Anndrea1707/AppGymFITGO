@@ -8,6 +8,7 @@ import 'package:gym_fitgo/screens/profile_admin.dart';
 import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
 import 'package:gym_fitgo/screens/admin_rutins_screen.dart';
 import 'package:gym_fitgo/screens/statistics_screen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   @override
@@ -19,6 +20,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+
+  // Lista de imágenes para el carrusel
+  final List<String> _carouselImages = [
+    'images/adminWelcome.jpeg',
+    'https://img.freepik.com/foto-gratis/vista-angulo-hombre-musculoso-irreconocible-preparandose-levantar-barra-club-salud_637285-2497.jpg?uid=R14880236&ga=GA1.1.742260549.1736050892&semt=ais_hybrid&w=740',
+    'https://img.freepik.com/foto-gratis/mujer-sosteniendo-pesas-cerca-pesas_651396-1617.jpg?uid=R14880236&ga=GA1.1.742260549.1736050892&semt=ais_hybrid&w=740',
+    'https://img.freepik.com/vector-gratis/publicacion-facebook-club-deportivo-diseno-plano_23-2150344104.jpg?uid=R14880236&ga=GA1.1.742260549.1736050892&semt=ais_hybrid&w=740',
+  ];
+
+  // Controlador para el carrusel
+  int _currentCarouselIndex = 0;
 
   // Función para manejar la navegación de la barra de navegación
   void _onTap(int index) {
@@ -58,31 +70,34 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Inicia el carrusel automático
+    Future.delayed(Duration.zero, () {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop, // Intercepta el evento de retroceso
+      onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Color(0xFF0a0322),
         appBar: AppBar(
           backgroundColor: Color(0xFFF5EDE4),
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: TextField(
-            decoration: InputDecoration(
-              hintText: "Search here ...",
-              border: InputBorder.none,
-              prefixIcon: Icon(Icons.search),
+          title: const Text(
+            'Bienvenido administrador/a',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
             ),
           ),
+          centerTitle: true,
           actions: [
             GestureDetector(
-              onTap: () {
-                // Aquí puedes implementar el cierre de sesión
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Image.asset(
@@ -100,30 +115,78 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Imagen de bienvenida
+                // Carrusel de bienvenida
                 Stack(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        image: DecorationImage(
-                          image: AssetImage('images/adminWelcome.jpeg'),
-                          fit: BoxFit.cover,
-                        ),
+                    CarouselSlider(
+                      items: _carouselImages.map((imageUrl) {
+                        return Builder(
+                          builder: (BuildContext context) {
+                            return Container(
+                              width: double.infinity,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                image: DecorationImage(
+                                  image: imageUrl.startsWith('http')
+                                      ? NetworkImage(imageUrl)
+                                      : AssetImage(imageUrl) as ImageProvider,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        height: 200,
+                        autoPlay: true,
+                        autoPlayInterval: Duration(seconds: 3),
+                        enlargeCenterPage: true,
+                        aspectRatio: 16 / 9,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            _currentCarouselIndex = index;
+                          });
+                        },
                       ),
                     ),
                     Positioned(
                       bottom: 16,
                       left: 16,
-                      child: Text(
-                        '¡Bienvenido Administrador!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        color: Colors.black54,
+                        child: Text(
+                          '¡Bienvenido Administrador!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _carouselImages.map((url) {
+                          int index = _carouselImages.indexOf(url);
+                          return Container(
+                            width: 8.0,
+                            height: 8.0,
+                            margin: EdgeInsets.symmetric(horizontal: 4.0),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _currentCarouselIndex == index
+                                  ? Colors.white
+                                  : Colors.grey,
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ],
@@ -136,27 +199,63 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 SizedBox(height: 10),
-                _buildCategoryButton('Recetas', Colors.white, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => NutritionTipsScreen_admin()),
-                  );
-                }),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => NutritionTipsScreen_admin()),
+                    );
+                  },
+                  icon: Icon(Icons.restaurant, color: Colors.black),
+                  label: Text('Recetas'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFF5EDE4),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 5,
+                  ),
+                ),
                 SizedBox(height: 10),
-                _buildCategoryButton('Gestión de Usuarios', Colors.white, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => UsersScreenAdmin()),
-                  );
-                }),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UsersScreenAdmin()),
+                    );
+                  },
+                  icon: Icon(Icons.people, color: Colors.black),
+                  label: Text('Gestión de Usuarios'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFF5EDE4),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 5,
+                  ),
+                ),
                 SizedBox(height: 10),
-                _buildCategoryButton('Estadísticas', Colors.white, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => StatisticsScreen()),
-                  );
-                }),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                    );
+                  },
+                  icon: Icon(Icons.bar_chart, color: Colors.black),
+                  label: Text('Estadísticas'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFF5EDE4),
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 5,
+                  ),
+                ),
                 _buildFunctionalCalendar(),
               ],
             ),
@@ -166,21 +265,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           currentIndex: _selectedIndex,
           onTap: _onTap,
         ),
-      ),
-    );
-  }
-
-  // Widget para botones de opciones
-  Widget _buildCategoryButton(String text, Color color, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(text, style: TextStyle(color: Colors.black)),
       ),
     );
   }
