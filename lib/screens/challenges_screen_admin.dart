@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar_admin.dart';
 import 'package:gym_fitgo/screens/admin_home_screen.dart';
 import 'package:gym_fitgo/screens/admin_rutins_screen.dart';
-import 'package:gym_fitgo/screens/statistics_screen.dart';
+import 'package:gym_fitgo/screens/profile_admin.dart';
 
 class ChallengesScreenAdmin extends StatefulWidget {
   @override
@@ -52,8 +52,13 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
     });
   }
 
-  void _editChallenge(String challengeId, Map<String, dynamic> updatedChallenge) {
-    _firestore.collection('Retos').doc(challengeId).update(updatedChallenge).then((_) {
+  void _editChallenge(
+      String challengeId, Map<String, dynamic> updatedChallenge) {
+    _firestore
+        .collection('Retos')
+        .doc(challengeId)
+        .update(updatedChallenge)
+        .then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Reto actualizado exitosamente')),
       );
@@ -88,7 +93,7 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
       case 3:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => StatisticsScreen()),
+          MaterialPageRoute(builder: (context) => ProfileAdmin()),
         );
         break;
     }
@@ -121,11 +126,12 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0a0322),
+      backgroundColor: const Color(0xFF2b192e), // Fondo oscuro
       appBar: AppBar(
         title: const Text('Retos administrador'),
-        backgroundColor: const Color(0xFFF5EDE4),
+        backgroundColor: const Color(0xFFf8e1ff), // Color claro
         automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
       body: StreamBuilder(
         stream: _firestore.collection('Retos').snapshots(),
@@ -159,14 +165,19 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(15.0),
-                      child: Image.network(
-                        challengeData['image'] ?? 'https://via.placeholder.com/200',
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.error, size: 200, color: Colors.white);
-                        },
+                      child: Opacity(
+                        opacity: 0.7, // Transparencia ajustada
+                        child: Image.network(
+                          challengeData['image'] ??
+                              'https://via.placeholder.com/200',
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.error,
+                                size: 200, color: Colors.white);
+                          },
+                        ),
                       ),
                     ),
                     Positioned.fill(
@@ -240,7 +251,7 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
                             children: [
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
+                                  backgroundColor: const Color(0xFF7a0180), // Color medio
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
@@ -253,7 +264,8 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
                                       challengeId: challengeId,
                                       challengeData: challengeData,
                                       onAddChallenge: (updatedChallengeData) {
-                                        _editChallenge(challengeId, updatedChallengeData);
+                                        _editChallenge(
+                                            challengeId, updatedChallengeData);
                                         Navigator.pop(context);
                                       },
                                     ),
@@ -267,7 +279,7 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
                               const SizedBox(width: 10),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: const Color(0xFFFF0000), // Rojo para eliminar
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
@@ -295,7 +307,7 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
         onTap: _onTap,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
+        backgroundColor: const Color(0xFF7a0180), // Color medio
         onPressed: () {
           showModalBottomSheet(
             context: context,
@@ -308,7 +320,7 @@ class _ChallengeScreenState extends State<ChallengesScreenAdmin> {
             ),
           );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -342,7 +354,8 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
   bool _isUploading = false;
 
   // Configuración de Cloudinary
-  final CloudinaryPublic cloudinary = CloudinaryPublic('dycjb5ovf', 'FitgoApp', cache: false);
+  final CloudinaryPublic cloudinary =
+      CloudinaryPublic('dycjb5ovf', 'FitgoApp', cache: false);
 
   @override
   void initState() {
@@ -351,20 +364,23 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
       _nameController.text = widget.challengeData!['name'] ?? '';
       _durationController.text = widget.challengeData!['duration'] ?? '';
       _descriptionController.text = widget.challengeData!['description'] ?? '';
-      _participantsController.text = widget.challengeData!['participants']?.toString() ?? '';
+      _participantsController.text =
+          widget.challengeData!['participants']?.toString() ?? '';
       _imageUrl = widget.challengeData!['image'];
 
       // Parsear las fechas si existen
       if (widget.challengeData!['fechaInicio'] != null) {
         try {
-          _fechaInicio = DateFormat('yyyy-MM-dd').parse(widget.challengeData!['fechaInicio']);
+          _fechaInicio = DateFormat('yyyy-MM-dd')
+              .parse(widget.challengeData!['fechaInicio']);
         } catch (e) {
           _fechaInicio = null;
         }
       }
       if (widget.challengeData!['fechaFin'] != null) {
         try {
-          _fechaFin = DateFormat('yyyy-MM-dd').parse(widget.challengeData!['fechaFin']);
+          _fechaFin =
+              DateFormat('yyyy-MM-dd').parse(widget.challengeData!['fechaFin']);
         } catch (e) {
           _fechaFin = null;
         }
@@ -408,7 +424,8 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
 
     try {
       final response = await cloudinary.uploadFile(
-        CloudinaryFile.fromFile(_selectedImage!.path, resourceType: CloudinaryResourceType.Image),
+        CloudinaryFile.fromFile(_selectedImage!.path,
+            resourceType: CloudinaryResourceType.Image),
       );
       setState(() {
         _imageUrl = response.secureUrl;
@@ -434,7 +451,9 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
         _imageUrl != null) {
       if (_fechaFin!.isBefore(_fechaInicio!)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('La fecha de fin debe ser posterior a la fecha de inicio')),
+          const SnackBar(
+              content: Text(
+                  'La fecha de fin debe ser posterior a la fecha de inicio')),
         );
         return;
       }
@@ -445,7 +464,9 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
         'image': _imageUrl,
         'fechaInicio': DateFormat('yyyy-MM-dd').format(_fechaInicio!),
         'fechaFin': DateFormat('yyyy-MM-dd').format(_fechaFin!),
-        'description': _descriptionController.text.isEmpty ? 'Sin descripción' : _descriptionController.text,
+        'description': _descriptionController.text.isEmpty
+            ? 'Sin descripción'
+            : _descriptionController.text,
         'participants': int.tryParse(_participantsController.text) ?? 0,
       };
 
@@ -460,119 +481,166 @@ class _AddChallengeScreenState extends State<AddChallengeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.challengeId == null ? 'Agregar Reto' : 'Editar Reto'),
-        backgroundColor: const Color(0xFFF5EDE4),
+      backgroundColor: const Color(0xFF2b192e), // Fondo oscuro
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80.0),
+        child: AppBar(
+          title: Text(widget.challengeId == null ? 'Agregar Reto' : 'Editar Reto'),
+          backgroundColor: const Color(0xFFf8e1ff), // Color claro
+          centerTitle: true,
+          elevation: 0,
+          toolbarHeight: 80.0,
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nombre del reto'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa un nombre para el reto';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _durationController,
-                  decoration: const InputDecoration(labelText: 'Duración del reto (días)'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa la duración del reto';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _participantsController,
-                  decoration: const InputDecoration(labelText: 'Cantidad de participantes'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa la cantidad de participantes';
-                    }
-                    if (int.tryParse(value) == null || int.parse(value) < 0) {
-                      return 'Ingresa un número válido';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Descripción del reto'),
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  title: Text(
-                    _fechaInicio == null
-                        ? 'Seleccione fecha de inicio'
-                        : 'Inicio: ${DateFormat('dd/MM/yyyy').format(_fechaInicio!)}',
-                  ),
-                  trailing: const Icon(Icons.calendar_today),
-                  onTap: () => _selectDate(context, true),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  title: Text(
-                    _fechaFin == null
-                        ? 'Seleccione fecha de fin'
-                        : 'Fin: ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}',
-                  ),
-                  trailing: const Icon(Icons.calendar_today),
-                  onTap: () => _selectDate(context, false),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _imageUrl == null ? 'No se ha seleccionado imagen' : 'Imagen seleccionada',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0).copyWith(top: 20.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre del reto',
+                      labelStyle: TextStyle(color: Colors.white),
                     ),
-                    ElevatedButton(
-                      onPressed: _isUploading ? null : _pickImage,
-                      child: _isUploading
-                          ? const CircularProgressIndicator()
-                          : const Text('Seleccionar Imagen'),
-                    ),
-                  ],
-                ),
-                if (_imageUrl != null) ...[
-                  const SizedBox(height: 16),
-                  Image.network(
-                    _imageUrl!,
-                    height: 100,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.error, size: 100);
+                    style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa un nombre para el reto';
+                      }
+                      return null;
                     },
                   ),
-                ],
-                const SizedBox(height: 16),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _saveChallenge,
-                    child: Text(widget.challengeId == null ? 'Guardar Reto' : 'Actualizar Reto'),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _durationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Duración del reto (días)',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa la duración del reto';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _participantsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Cantidad de participantes',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa la cantidad de participantes';
+                      }
+                      if (int.tryParse(value) == null || int.parse(value) < 0) {
+                        return 'Ingresa un número válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descripción del reto',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    title: Text(
+                      _fechaInicio == null
+                          ? 'Seleccione fecha de inicio'
+                          : 'Inicio: ${DateFormat('dd/MM/yyyy').format(_fechaInicio!)}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(Icons.calendar_today, color: Colors.white),
+                    onTap: () => _selectDate(context, true),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    title: Text(
+                      _fechaFin == null
+                          ? 'Seleccione fecha de fin'
+                          : 'Fin: ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(Icons.calendar_today, color: Colors.white),
+                    onTap: () => _selectDate(context, false),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _imageUrl == null
+                              ? 'No se ha seleccionado imagen'
+                              : 'Imagen seleccionada',
+                          style: const TextStyle(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7a0180), // Color medio
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                        ),
+                        onPressed: _isUploading ? null : _pickImage,
+                        child: _isUploading
+                            ? const CircularProgressIndicator()
+                            : const Text('Seleccionar Imagen', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                  if (_imageUrl != null) ...[
+                    const SizedBox(height: 16),
+                    Opacity(
+                      opacity: 0.7, // Transparencia ajustada
+                      child: Image.network(
+                        _imageUrl!,
+                        height: 100,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.error, size: 100);
+                        },
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7a0180), // Color medio
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                      ),
+                      onPressed: _saveChallenge,
+                      child: Text(widget.challengeId == null
+                          ? 'Guardar Reto'
+                          : 'Actualizar Reto', style: const TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

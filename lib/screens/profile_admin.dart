@@ -26,7 +26,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
   String? photoUrl;
   bool _isLoadingPhoto = false;
 
-  final CloudinaryPublic cloudinary = CloudinaryPublic('dycjb5ovf', 'FitgoApp', cache: false);
+  final CloudinaryPublic cloudinary =
+      CloudinaryPublic('dycjb5ovf', 'FitgoApp', cache: false);
 
   @override
   void initState() {
@@ -50,7 +51,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
       });
       _loadUserData(storedEmail);
     } else {
-      print('No se encontró email en SharedPreferences, redirigiendo a LoginScreen');
+      print(
+          'No se encontró email en SharedPreferences, redirigiendo a LoginScreen');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -71,9 +73,15 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
         print('Datos del usuario: $data');
         setState(() {
           name = data['name'] ?? 'Sin nombre';
-          age = data['age'] != null ? int.tryParse(data['age'].toString()) ?? 0 : 0;
-          weight = data['weight'] != null ? double.tryParse(data['weight'].toString()) ?? 0.0 : 0.0;
-          height = data['height'] != null ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100 : 0.0;
+          age = data['age'] != null
+              ? int.tryParse(data['age'].toString()) ?? 0
+              : 0;
+          weight = data['weight'] != null
+              ? double.tryParse(data['weight'].toString()) ?? 0.0
+              : 0.0;
+          height = data['height'] != null
+              ? (double.tryParse(data['height'].toString()) ?? 0.0) / 100
+              : 0.0;
           photoUrl = data['photoUrl'];
         });
       } else {
@@ -81,7 +89,9 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
           name = 'No se encontraron datos';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se encontraron datos para este email ($email) en Firestore.')),
+          SnackBar(
+              content: Text(
+                  'No se encontraron datos para este email ($email) en Firestore.')),
         );
       }
     } catch (e) {
@@ -137,7 +147,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
         builder: (context) {
           return AlertDialog(
             title: Text('Confirmar cambio de foto'),
-            content: Text('¿Estás seguro de que quieres cambiar tu foto de perfil?'),
+            content:
+                Text('¿Estás seguro de que quieres cambiar tu foto de perfil?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -158,7 +169,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
         });
         try {
           final response = await cloudinary.uploadFile(
-            CloudinaryFile.fromFile(image.path, resourceType: CloudinaryResourceType.Image),
+            CloudinaryFile.fromFile(image.path,
+                resourceType: CloudinaryResourceType.Image),
           );
           String newPhotoUrl = response.secureUrl;
           await _updateUserData({'photoUrl': newPhotoUrl});
@@ -238,10 +250,13 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
   }
 
   void _editUserData() {
-    final TextEditingController nameController = TextEditingController(text: name);
-    final TextEditingController emailController = TextEditingController(text: email);
+    final TextEditingController nameController =
+        TextEditingController(text: name);
+    final TextEditingController emailController =
+        TextEditingController(text: email);
     final TextEditingController passwordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
 
     showDialog(
       context: context,
@@ -263,12 +278,14 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                 ),
                 TextField(
                   controller: passwordController,
-                  decoration: InputDecoration(labelText: 'Contraseña (mín. 8 caracteres)'),
+                  decoration: InputDecoration(
+                      labelText: 'Contraseña (mín. 8 caracteres)'),
                   obscureText: true,
                 ),
                 TextField(
                   controller: confirmPasswordController,
-                  decoration: InputDecoration(labelText: 'Confirmar contraseña'),
+                  decoration:
+                      InputDecoration(labelText: 'Confirmar contraseña'),
                   obscureText: true,
                 ),
               ],
@@ -281,13 +298,17 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
             ),
             TextButton(
               onPressed: () async {
-                String? password = passwordController.text.isNotEmpty ? passwordController.text : null;
+                String? password = passwordController.text.isNotEmpty
+                    ? passwordController.text
+                    : null;
                 String confirmPassword = confirmPasswordController.text;
 
                 if (password != null) {
                   if (password.length < 8) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('La contraseña debe tener al menos 8 caracteres')),
+                      SnackBar(
+                          content: Text(
+                              'La contraseña debe tener al menos 8 caracteres')),
                     );
                     return;
                   }
@@ -322,7 +343,7 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1039),
+      backgroundColor: const Color(0xFF2B192E),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -334,12 +355,27 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                 child: Column(
                   children: [
                     Stack(
+                      alignment:
+                          Alignment.center, // Centra todos los hijos del Stack
                       children: [
+                        // Círculo de fondo claro más grande
+                        Container(
+                          width:
+                              110, // Tamaño más grande que el CircleAvatar (radius: 50 -> diámetro 100)
+                          height: 110,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                Color(0xFFf8e1ff), // Color claro de referencia
+                          ),
+                        ),
+                        // CircleAvatar con la foto de perfil
                         CircleAvatar(
                           radius: 50,
                           backgroundImage: photoUrl != null
                               ? NetworkImage(photoUrl!)
-                              : const AssetImage('images/admin.jpg') as ImageProvider,
+                              : const AssetImage('images/admin.jpg')
+                                  as ImageProvider,
                           backgroundColor: Colors.grey,
                         ),
                         Positioned(
@@ -352,7 +388,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                               decoration: BoxDecoration(
                                 color: Colors.purple,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
                               ),
                               child: _isLoadingPhoto
                                   ? const CircularProgressIndicator(
@@ -397,9 +434,8 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                 ),
               ),
               const SizedBox(height: 16),
-
               Card(
-                color: Colors.white10,
+                color: Color(0xFFF8E1FF),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -411,7 +447,7 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                       const Text(
                         "Información Personal",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -420,9 +456,15 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildUserDetail("Edad", age > 0 ? "$age años" : "Cargando..."),
-                          _buildUserDetail("Peso", weight > 0 ? "$weight kg" : "Cargando..."),
-                          _buildUserDetail("Altura", height > 0 ? "${height.toStringAsFixed(2)} m" : "Cargando..."),
+                          _buildUserDetail(
+                              "Edad", age > 0 ? "$age años" : "Cargando..."),
+                          _buildUserDetail("Peso",
+                              weight > 0 ? "$weight kg" : "Cargando..."),
+                          _buildUserDetail(
+                              "Altura",
+                              height > 0
+                                  ? "${height.toStringAsFixed(2)} m"
+                                  : "Cargando..."),
                         ],
                       ),
                     ],
@@ -430,7 +472,6 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
                 ),
               ),
               const SizedBox(height: 24),
-
               _buildOptionButton(
                 icon: Icons.edit,
                 text: "Editar datos",
@@ -483,12 +524,12 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
       children: [
         Text(
           title,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: const TextStyle(color: Colors.black, fontSize: 14),
         ),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -513,7 +554,7 @@ class _AdminProfileScreenState extends State<ProfileAdmin> {
           style: const TextStyle(color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: color ?? const Color(0xFF7E57C2),
+          backgroundColor: color ?? const Color.fromARGB(255, 121, 53, 160),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

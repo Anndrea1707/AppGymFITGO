@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gym_fitgo/screens/login_screen.dart';
+import 'package:gym_fitgo/screens/SplashScreen.dart';
 import 'services/notification_services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -28,8 +28,16 @@ class MyGymApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: LoginScreen(),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        // Definir el tema global para BottomNavigationBar
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFFF8E1FF), // Fondo claro de referencia
+          selectedItemColor: Colors.purple, // Color morado para ítems seleccionados
+          unselectedItemColor: Colors.black, // Color negro para ítems no seleccionados
+        ),
+      ),
     );
   }
 }

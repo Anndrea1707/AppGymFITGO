@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gym_fitgo/screens/home_screen.dart'; // Importar pantallas desde archivos separados
+import 'package:gym_fitgo/screens/home_screen.dart';
 import 'package:gym_fitgo/screens/challenges_screen.dart';
 import 'package:gym_fitgo/screens/profile_screen.dart';
 import 'package:gym_fitgo/screens/rutinas_screen.dart';
@@ -16,54 +16,57 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      backgroundColor: Color(0xFFF5EDE4), // Fondo beige
-      selectedItemColor: Colors.purple,   // Color morado para los íconos seleccionados
-      unselectedItemColor: Colors.black,  // Color negro para los no seleccionados
-      currentIndex: currentIndex,         // Controla qué ítem está seleccionado
+      backgroundColor: Color(0xFFF5EDE4), // Fondo claro
+      selectedItemColor: Colors.purple,   // Íconos seleccionados en morado
+      unselectedItemColor: Colors.black,  // Íconos no seleccionados en negro
+      currentIndex: currentIndex,
       onTap: (index) {
-        // Cambiar la pantalla según el índice del botón presionado
-        switch (index) {
-          case 0:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen()), // Pantalla de Principal en otro archivo
-            );
-            break;
-          case 1:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => RutinasScreen()), // Pantalla de Rutinas en otro archivo
-            );
-            break;
-          case 2:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChallengesScreen()), // Pantalla de Retos en otro archivo
-            );
-            break;
-          case 3:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()), // Pantalla de Perfil en otro archivo
-            );
-            break;
+        onTap(index); // Actualiza el índice en el estado padre
+        // Navega solo si no estamos en la pantalla actual
+        if (index != currentIndex) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => RutinasScreen()),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ChallengesScreen()),
+              );
+              break;
+            case 3:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+              break;
+          }
         }
       },
       items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+          icon: Image.asset('images/gimnasia.png', width: 24, height: 24),
           label: 'Principal',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.fitness_center),
+          icon: Image.asset('images/rutina-de-ejercicios.png', width: 24, height: 24),
           label: 'Rutinas',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.flag),
+          icon: Image.asset('images/entrenamiento-de-fuerza.png', width: 24, height: 24),
           label: 'Retos',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
+          icon: Image.asset('images/perfil.png', width: 24, height: 24),
           label: 'Perfil',
         ),
       ],

@@ -7,7 +7,7 @@ import 'package:gym_fitgo/screens/users_screen_admin.dart';
 import 'package:gym_fitgo/screens/profile_admin.dart';
 import 'package:gym_fitgo/screens/challenges_screen_admin.dart';
 import 'package:gym_fitgo/screens/admin_rutins_screen.dart';
-import 'package:gym_fitgo/screens/statistics_screen.dart';
+import 'package:gym_fitgo/screens/equipament_Screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -40,22 +40,22 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
     switch (index) {
       case 0:
-        // Ya estamos en esta pantalla, no es necesario navegar
+        // No navegar, ya estamos en AdminHomeScreen
         break;
       case 1:
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => AdminRutinsScreen()),
         );
         break;
       case 2:
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ChallengesScreenAdmin()),
         );
         break;
       case 3:
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ProfileAdmin()),
         );
@@ -85,7 +85,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       child: Scaffold(
         backgroundColor: Color(0xFF0a0322),
         appBar: AppBar(
-          backgroundColor: Color(0xFFF5EDE4),
+          backgroundColor: Color(0xFFF8E1FF), // Color claro de referencia
           elevation: 0,
           automaticallyImplyLeading: false,
           title: const Text(
@@ -99,11 +99,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           actions: [
             GestureDetector(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Image.asset(
-                  "images/mancuerna.png",
-                  width: 32,
-                  height: 32,
+                padding: const EdgeInsets.only(right: 16.0), // Separar del borde derecho
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Color.fromARGB(255, 254, 254, 254), // Fondo claro para resaltar
+                  child: Image.asset(
+                    "images/logoGym.png", // Logo personalizado
+                    width: 32,
+                    height: 32,
+                  ),
                 ),
               ),
             ),
@@ -210,7 +214,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   icon: Icon(Icons.restaurant, color: Colors.black),
                   label: Text('Recetas'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF5EDE4),
+                    backgroundColor: Color(0xFFF8E1FF),
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -229,7 +233,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   icon: Icon(Icons.people, color: Colors.black),
                   label: Text('Gestión de Usuarios'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF5EDE4),
+                    backgroundColor: Color(0xFFF8E1FF),
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -242,13 +246,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                      MaterialPageRoute(builder: (context) => EquipmentScreen()),
                     );
                   },
                   icon: Icon(Icons.bar_chart, color: Colors.black),
-                  label: Text('Estadísticas'),
+                  label: Text('Equipamiento GYM'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF5EDE4),
+                    backgroundColor: Color(0xFFF8E1FF),
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),

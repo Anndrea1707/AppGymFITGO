@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Importa Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gym_fitgo/widgets/custom_bottom_navbar.dart';
 import 'exercise_description_screen.dart';
 
@@ -9,41 +10,103 @@ class RutinasScreen extends StatefulWidget {
 }
 
 class RutinasScreenState extends State<RutinasScreen> {
-  int _selectedIndex = 0; // Índice seleccionado
+  int _selectedIndex = 1;
+  String? _userEmail;
+  String? _userId;
 
-  // Referencia a la colección de Firestore
   final CollectionReference _routinesCollection =
-      FirebaseFirestore.instance.collection('RutinasAdmin');
+      FirebaseFirestore.instance.collection('Rutinas');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? email = prefs.getString('user_email');
+
+    print('Email obtenido de SharedPreferences: $email');
+
+    if (email != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        setState(() {
+          _userEmail = email;
+          _userId = userDoc.docs.first.id;
+          print('UserId obtenido: $_userId');
+        });
+      } else {
+        print('No se encontró un usuario con el email: $email');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se encontró el usuario con este email')),
+        );
+      }
+    } else {
+      print('No se encontró el email en SharedPreferences');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se encontró el email del usuario')),
+      );
+    }
+  }
+
+  void _onNavBarTapped(int index) {
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 21, 2, 34), // Fondo oscuro
+      backgroundColor: const Color(0xFF2B192E),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5EDE4),
+        backgroundColor: const Color(0xFFF8E1FF),
         title: const Text(
-          'Rutina Semanal',
+          'Rutinas de la Semana',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _routinesCollection.snapshots(), // Escuchar cambios en tiempo real
+        stream: _userId != null
+            ? _routinesCollection.where('userId', isEqualTo: _userId).snapshots()
+            : const Stream.empty(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            print('Error en StreamBuilder: ${snapshot.error}');
+            return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.white)));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
 
+          if (!snapshot.hasData || snapshot.data == null) {
+            print('No hay datos en el snapshot para userId $_userId');
+            return Center(
+              child: Text(
+                'No hay datos disponibles.',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            );
+          }
+
           var routines = snapshot.data!.docs;
+
+          print('Rutinas encontradas para userId $_userId: ${routines.length}');
 
           if (routines.isEmpty) {
             return Center(
               child: Text(
-                'No hay rutinas disponibles.',
+                'No hay rutinas disponibles para ti.',
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
             );
@@ -55,95 +118,110 @@ class RutinasScreenState extends State<RutinasScreen> {
             itemBuilder: (context, index) {
               var routineDoc = routines[index];
               var routine = routineDoc.data() as Map<String, dynamic>? ?? {};
-              return _buildRoutineCard(routine);
+              return _buildRoutineCard(routine, routineDoc.id);
             },
           );
         },
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        currentIndex: _selectedIndex,
+        onTap: _onNavBarTapped,
       ),
     );
   }
 
-  Widget _buildRoutineCard(Map<String, dynamic> routine) {
-    // Manejo de valores null con valores por defecto
-    final day = routine['day']?.toString() ?? 'Sin día';
+  Widget _buildRoutineCard(Map<String, dynamic> routine, String routineId) {
+    final day = routine['name']?.toString() ?? 'Sin día';
     final description = routine['description']?.toString() ?? 'Sin descripción';
     final exercises = routine['exercises'] is List
-        ? List<String>.from(routine['exercises'].map((e) => e?.toString() ?? 'Sin ejercicio'))
-        : ['Sin ejercicios'];
-    final image = routine['image']?.toString() ?? 'https://via.placeholder.com/100';
+        ? List<Map<String, dynamic>>.from(routine['exercises'])
+        : <Map<String, dynamic>>[];
+
+    final exerciseCount = exercises.length;
+
+    int totalTimeInSeconds = 0;
+    for (var exercise in exercises) {
+      final timer = exercise['timer'] as int? ?? 0;
+      totalTimeInSeconds += timer;
+    }
+
+    final hours = totalTimeInSeconds ~/ 3600;
+    final minutes = (totalTimeInSeconds ~/ 60) % 60;
+    final seconds = totalTimeInSeconds % 60;
+    final totalTimeString = hours > 0
+        ? '$hours h $minutes m $seconds s'
+        : minutes > 0
+            ? '$minutes m $seconds s'
+            : '$seconds s';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Colors.grey[850],
+      color: const Color(0xFFF8E1FF),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Row(
+        child: Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15.0),
-              child: Image.network(
-                image,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.error, size: 100, color: Colors.white);
-                },
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  day,
+                  style: const TextStyle(
+                    color: Color(0xFF2B192E),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(color: Color.fromARGB(255, 43, 25, 46), fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Cantidad de ejercicios: $exerciseCount',
+                  style: const TextStyle(color: Color.fromARGB(255, 43, 25, 46), fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tiempo total: $totalTimeString',
+                  style: const TextStyle(color: Color.fromARGB(255, 43, 25, 46), fontSize: 14),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    day,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ExerciseDescriptionScreen(
-                            day: day,
-                            description: description,
-                            exercises: exercises,
-                            image: image,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 192, 125, 204),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: ElevatedButton(
+                onPressed: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ExerciseDescriptionScreen(
+                        day: day,
+                        description: description,
+                        exercises: exercises,
+                        equipmentIds: routine['equipmentIds']?.cast<String>() ?? [],
+                        image: null,
+                        routineId: routineId,
+                        userId: _userId,
                       ),
                     ),
-                    child: const Text('Ver rutina'),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7A0180),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
-                ],
+                ),
+                child: const Text(
+                  'Ver rutina',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],
