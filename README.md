@@ -1,16 +1,23 @@
-# gym_fitgo
+# FitGo - App para Gestión de Gimnasio 🏋️‍♀️📱
 
-A new Flutter project.
+Aplicación móvil desarrollada en Flutter para la gestión de un gimnasio. Permite a los usuarios registrarse, ver planes de entrenamiento, recetas saludables y retos, mientras que los administradores pueden gestionar usuarios y sus planes de entrenamiento. 
 
-## Getting Started
+## Funcionalidades principales
+- Registro e inicio de sesión de usuarios
+- Panel de administrador
+- Sección de entrenamiento
+- Recetas saludables
+- Retos motivacionales
+- Agente inteligente (Tony) para recomendaciones
 
-This project is a starting point for a Flutter application.
+## Tecnologías utilizadas
+- Flutter (Dart)
+- Firebase (Auth, Firestore)
+- Cloudinary
+- Git y GitHub para control de versiones
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Autores
+- Andrea Hernández
+- Jeisy Jiménez
+- Ashly Hewat
+- Paula Llanes
